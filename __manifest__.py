@@ -1,0 +1,30 @@
+{
+    'name': 'Library Management System',
+    'version': '3.0',
+    'category': 'Library',
+    'summary': 'Complete Library Management with Books, Members, Borrowing, Rooms',
+    'depends': ['base', 'mail', 'web', 'base_setup'],
+    'data': [
+        'security/groups.xml',
+        'security/ir.model.access.csv',
+        'views/res_config_settings_views.xml',
+        'views/book_views.xml',
+        'views/member_views.xml',
+        'views/borrow_views.xml',
+        'views/room_views.xml',
+        'views/room_booking_views.xml',
+        'views/library_user_views.xml',
+        'views/menu_views.xml',
+        'views/dashboard_action.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'library/static/src/css/library.css',
+            'library/static/src/xml/dashboard.xml',
+            'library/static/src/js/library.js',
+        ],
+    },
+    'installable': True,
+    'auto_install': False,
+    'license': 'LGPL-3',
+}

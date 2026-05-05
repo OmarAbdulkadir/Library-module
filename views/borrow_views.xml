@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_library_borrow_form" model="ir.ui.view">
+        <field name="name">library.borrow.form</field>
+        <field name="model">library.borrow</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_return" string="Return Book"
+                            type="object" class="oe_highlight"
+                            invisible="state != 'borrowed'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="borrowed,returned,overdue"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Borrow Details">
+                            <field name="member_id"/>
+                            <field name="book_id"/>
+                            <field name="borrow_date"/>
+                            <field name="due_date"/>
+                            <field name="return_date"
+                                   invisible="state == 'borrowed'"/>
+                        </group>
+                        <group string="Status">
+                            <field name="duration_days"/>
+                            <field name="is_overdue"/>
+                            <field name="fine_amount"/>
+                            <field name="notes"/>
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    <record id="view_library_borrow_list" model="ir.ui.view">
+        <field name="name">library.borrow.list</field>
+        <field name="model">library.borrow</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="book_id"/>
+                <field name="borrow_date"/>
+                <field name="due_date"/>
+                <field name="return_date"/>
+                <field name="fine_amount"/>
+                <field name="state"
+                       decoration-success="state == 'returned'"
+                       decoration-danger="state == 'overdue'"
+                       decoration-info="state == 'borrowed'"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_library_borrow_search" model="ir.ui.view">
+        <field name="name">library.borrow.search</field>
+        <field name="model">library.borrow</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="member_id"/>
+                <field name="book_id"/>
+                <filter string="Currently Borrowed" name="borrowed"
+                        domain="[('state','=','borrowed')]"/>
+                <filter string="Returned" name="returned"
+                        domain="[('state','=','returned')]"/>
+                <filter string="Overdue" name="overdue"
+                        domain="[('state','=','overdue')]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_library_borrow" model="ir.actions.act_window">
+        <field name="name">Borrowings</field>
+        <field name="res_model">library.borrow</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_library_borrow_search"/>
+    </record>
+</odoo>

@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="library.Dashboard">
+  <div t-att-class="'lib-dashboard lib-mood-' + state.ambientMood">
+
+    <div class="lib-navbar">
+      <div class="lib-navbar-brand">
+        <span class="brand-icon">📚</span>
+        <span class="brand-name">University Library</span>
+      </div>
+      <div class="lib-navbar-tabs">
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'dashboard' ? 'active' : ''" t-on-click="() => this.setTab('dashboard')" data-tooltip="Overview">🏠 Dashboard</button>
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'books' ? 'active' : ''" t-on-click="() => this.setTab('books')" data-tooltip="Browse Books">📖 Books</button>
+        <button t-if="state.isStaff" class="lib-nav-tab" t-att-class="state.activeTab === 'members' ? 'active' : ''" t-on-click="() => this.setTab('members')" data-tooltip="Library Members">👥 Members</button>
+        <button t-if="state.isStaff" class="lib-nav-tab" t-att-class="state.activeTab === 'borrows' ? 'active' : ''" t-on-click="() => this.setTab('borrows')" data-tooltip="Active Borrowings">
+          📋 Borrowings
+          <span t-if="state.stats.overdueCount &gt; 0" class="tab-badge overdue-badge"><t t-esc="state.stats.overdueCount"/> overdue</span>
+        </button>
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'rooms' ? 'active' : ''" t-on-click="() => this.setTab('rooms')" data-tooltip="Study Rooms">🚪 Rooms</button>
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'bookings' ? 'active' : ''" t-on-click="() => this.setTab('bookings')" data-tooltip="Room Bookings">
+          📅 Bookings
+          <span t-if="state.isStaff and state.stats.pendingBookings &gt; 0" class="tab-badge"><t t-esc="state.stats.pendingBookings"/></span>
+        </button>
+        <button t-if="state.isAdmin" class="lib-nav-tab" t-att-class="state.activeTab === 'settings' ? 'active' : ''" t-on-click="() => this.setTab('settings')" data-tooltip="Library Settings">⚙ Settings</button>
+      </div>
+      <div class="lib-navbar-right">
+        <div class="lib-clock"><t t-esc="state.currentTime"/></div>
+        <div t-att-class="'lib-open-badge ' + (state.libraryOpen ? 'open' : 'closed')">
+          <span class="lib-open-dot"/>
+          <t t-if="state.libraryOpen">OPEN</t>
+          <t t-else="">CLOSED</t>
+        </div>
+        <span t-if="state.isAdmin" style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:12px;font-size:12px;color:white;">👑 Admin</span>
+        <span t-elif="state.isStaff" style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:12px;font-size:12px;color:white;">👔 Staff</span>
+        <span t-else="" style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:12px;font-size:12px;color:white;">🎓 Student</span>
+      </div>
+    </div>
+
+    <div t-if="state.showAnnouncement and state.announcement" class="lib-announcement">
+      📢 <t t-esc="state.announcement"/>
+    </div>
+
+    <div t-if="state.isStaff and state.stats.overdueCount &gt; 0" class="lib-overdue-alert">
+      ⚠️ <strong><t t-esc="state.stats.overdueCount"/> overdue book(s)</strong> — please follow up with members
+      <button class="lib-btn-inline" t-on-click="() => this.setTab('borrows')">View →</button>
+    </div>
+
+    <div t-if="state.loading" class="lib-loading">
+      <div class="lib-spinner"/>
+      <span>Loading library data...</span>
+    </div>
+
+    <div t-else="" class="lib-content">
+
+      <!-- DASHBOARD TAB -->
+      <t t-if="state.activeTab === 'dashboard'">
+        <div t-att-class="'lib-mood-banner lib-animate lib-mood-banner-' + state.ambientMood">
+          <span class="lib-mood-icon">
+            <t t-if="state.ambientMood === 'quiet'">🌙</t>
+            <t t-elif="state.ambientMood === 'moderate'">📖</t>
+            <t t-elif="state.ambientMood === 'busy'">⚡</t>
+            <t t-else="">🔥</t>
+          </span>
+          <div>
+            <div class="lib-mood-title">
+              <t t-if="state.ambientMood === 'quiet'">Library is Quiet</t>
+              <t t-elif="state.ambientMood === 'moderate'">Library is Active</t>
+              <t t-elif="state.ambientMood === 'busy'">Library is Busy</t>
+              <t t-else="">Library is at Capacity</t>
+            </div>
+            <div class="lib-mood-sub">
+              <t t-if="state.ambientMood === 'quiet'">Great time to find a quiet spot 😌</t>
+              <t t-elif="state.ambientMood === 'moderate'">Rooms are filling up — book early 📅</t>
+              <t t-elif="state.ambientMood === 'busy'">Very busy today — limited space available ⚠️</t>
+              <t t-else="">All rooms near capacity — check back later 🚫</t>
+            </div>
+          </div>
+        </div>
+
+        <div class="lib-stats-grid">
+          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('books')">
+            <div class="lib-stat-icon">📚</div>
+            <div class="lib-stat-number"><t t-esc="state.stats.books"/></div>
+            <div class="lib-stat-label">Total Books</div>
+          </div>
+          <div t-if="state.isStaff" class="lib-stat-card lib-animate" t-on-click="() => this.setTab('members')">
+            <div class="lib-stat-icon">👥</div>
+            <div class="lib-stat-number"><t t-esc="state.stats.members"/></div>
+            <div class="lib-stat-label">Members</div>
+          </div>
+          <div t-if="state.isStaff" class="lib-stat-card lib-animate" t-on-click="() => this.setTab('borrows')">
+            <div class="lib-stat-icon">📋</div>
+            <div class="lib-stat-number"><t t-esc="state.stats.borrows"/></div>
+            <div class="lib-stat-label">Active Borrows</div>
+          </div>
+          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('rooms')">
+            <div class="lib-stat-icon">🚪</div>
+            <div class="lib-stat-number"><t t-esc="state.stats.rooms"/></div>
+            <div class="lib-stat-label">Study Rooms</div>
+          </div>
+          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('bookings')">
+            <div class="lib-stat-icon">⏳</div>
+            <div class="lib-stat-number"><t t-esc="state.stats.pendingBookings"/></div>
+            <div class="lib-stat-label">Pending Bookings</div>
+          </div>
+        </div>
+
+        <div t-if="state.isStaff and state.mostBorrowedBook" class="lib-featured-book lib-animate">
+          <div class="lib-featured-icon">🏆</div>
+          <div>
+            <div class="lib-featured-label">MOST BORROWED BOOK</div>
+            <div class="lib-featured-title"><t t-esc="state.mostBorrowedBook.name"/></div>
+          </div>
+          <div class="lib-featured-count"><t t-esc="state.mostBorrowedBook.count"/>x borrowed</div>
+        </div>
+
+        <div class="lib-room-quick lib-animate">
+          <div class="lib-room-quick-title">🚦 Room Status</div>
+          <div class="lib-room-quick-grid">
+            <t t-foreach="state.rooms" t-as="room" t-key="room.id">
+              <div class="lib-room-quick-item" t-on-click="() => this.setTab('rooms')">
+                <div t-att-class="'lib-traffic-light lib-light-' + this.getRoomLight(room)">
+                  <div class="lib-light-dot"/>
+                </div>
+                <div class="lib-room-quick-name"><t t-esc="room.name"/></div>
+                <div class="lib-room-quick-occ"><t t-esc="room.current_occupancy"/>/<t t-esc="room.capacity"/></div>
+              </div>
+            </t>
+          </div>
+        </div>
+
+        <div t-if="state.isStaff" class="lib-dashboard-grid">
+          <div class="lib-card lib-animate">
+            <div class="lib-card-header">
+              <h3>📅 Pending Bookings</h3>
+              <button class="lib-btn lib-btn-primary" t-on-click="() => this.setTab('bookings')">View All</button>
+            </div>
+            <t t-set="pending" t-value="state.bookings.filter(b => b.state === 'pending')"/>
+            <div t-if="pending.length === 0" class="lib-empty">
+              <div class="lib-empty-icon">✅</div>
+              No pending bookings
+            </div>
+            <t t-foreach="pending.slice(0,5)" t-as="booking" t-key="booking.id">
+              <div class="lib-booking-card pending">
+                <div class="lib-booking-main">
+                  <div>
+                    <div class="lib-booking-title"><t t-esc="booking.name"/></div>
+                    <div class="lib-booking-detail">🚪 <t t-esc="booking.room_id[1]"/></div>
+                    <div class="lib-booking-detail">⏰ <t t-esc="booking.start_time"/></div>
+                  </div>
+                  <div class="lib-booking-actions">
+                    <button class="lib-btn lib-btn-approve" t-on-click="() => this.approveBooking(booking.id)">✓ Approve</button>
+                    <button class="lib-btn lib-btn-reject" t-on-click="() => this.rejectBooking(booking.id)">✗ Reject</button>
+                  </div>
+                </div>
+              </div>
+            </t>
+          </div>
+
+          <div class="lib-card lib-animate">
+            <div class="lib-card-header">
+              <h3>📋 Recent Borrowings</h3>
+              <button class="lib-btn lib-btn-primary" t-on-click="() => this.setTab('borrows')">View All</button>
+            </div>
+            <div t-if="state.borrows.length === 0" class="lib-empty">
+              <div class="lib-empty-icon">📚</div>
+              No borrowings yet
+            </div>
+            <t t-foreach="state.borrows.slice(0,5)" t-as="borrow" t-key="borrow.id">
+              <div t-att-class="'lib-member-card' + (borrow.is_overdue ? ' lib-overdue-row' : '')"
+                   t-on-click="() => this.openRecord('library.borrow', borrow.id)">
+                <div class="lib-member-avatar">📖</div>
+                <div class="lib-member-info">
+                  <div class="lib-member-name"><t t-esc="borrow.name"/></div>
+                  <div class="lib-member-id">Due: <t t-esc="borrow.due_date"/>
+                    <span t-if="borrow.is_overdue" class="lib-overdue-tag">OVERDUE</span>
+                  </div>
+                </div>
+                <span t-att-class="'lib-status ' + borrow.state"><t t-esc="borrow.state"/></span>
+              </div>
+            </t>
+          </div>
+        </div>
+
+        <!-- STUDENT DASHBOARD -->
+        <div t-if="state.isPortal" class="lib-dashboard-grid">
+          <div class="lib-card lib-animate">
+            <div class="lib-card-header"><h3>📖 Available Books</h3></div>
+            <t t-foreach="state.books.filter(b => b.state === 'available').slice(0,5)" t-as="book" t-key="book.id">
+              <div class="lib-member-card" t-on-click="() => this.openRecord('library.book', book.id)">
+                <div class="lib-member-avatar">📚</div>
+                <div class="lib-member-info">
+                  <div class="lib-member-name"><t t-esc="book.name"/></div>
+                  <div class="lib-member-id">by <t t-esc="book.author"/></div>
+                </div>
+                <span t-att-class="'lib-type-badge ' + book.book_type">
+                  <t t-if="book.book_type === 'ebook'">💻 E-Book</t>
+                  <t t-else="">📚 Physical</t>
+                </span>
+              </div>
+            </t>
+          </div>
+          <div class="lib-card lib-animate">
+            <div class="lib-card-header"><h3>🚪 Available Rooms</h3></div>
+            <t t-foreach="state.rooms.filter(r => r.state === 'available').slice(0,4)" t-as="room" t-key="room.id">
+              <div class="lib-member-card" t-on-click="() => this.setTab('rooms')">
+                <div class="lib-member-avatar">🚪</div>
+                <div class="lib-member-info">
+                  <div class="lib-member-name"><t t-esc="room.name"/></div>
+                  <div class="lib-member-id">Occupancy: <t t-esc="room.current_occupancy"/>/<t t-esc="room.capacity"/></div>
+                </div>
+                <span t-if="room.is_crowded" class="lib-status borrowed">Crowded</span>
+                <span t-else="" class="lib-status available">Available</span>
+              </div>
+            </t>
+          </div>
+        </div>
+      </t>
+
+      <!-- BOOKS TAB -->
+      <t t-if="state.activeTab === 'books'">
+        <div class="lib-page-header">
+          <h2>📖 Books</h2>
+          <button t-if="state.isStaff" class="lib-btn lib-btn-primary" t-on-click="() => this.openList('library.book')">+ New Book</button>
+        </div>
+        <div class="lib-filters">
+          <button t-att-class="'lib-filter-btn' + (state.bookFilter === 'all' ? ' active' : '')" t-on-click="() => this.setBookFilter('all')">All Books</button>
+          <button t-att-class="'lib-filter-btn' + (state.bookFilter === 'physical' ? ' active' : '')" t-on-click="() => this.setBookFilter('physical')">📚 Physical</button>
+          <button t-att-class="'lib-filter-btn' + (state.bookFilter === 'ebook' ? ' active' : '')" t-on-click="() => this.setBookFilter('ebook')">💻 E-Books</button>
+        </div>
+        <input class="lib-search" type="text" placeholder="Search books by title or author..." t-model="state.searchBook"/>
+        <div class="lib-books-grid">
+          <t t-foreach="filteredBooks" t-as="book" t-key="book.id">
+            <div class="lib-book-card" t-on-click="() => this.openRecord('library.book', book.id)">
+              <span t-att-class="'lib-type-badge ' + book.book_type">
+                <t t-if="book.book_type === 'ebook'">💻 E-Book</t>
+                <t t-else="">📚 Physical</t>
+              </span>
+              <div class="lib-book-title"><t t-esc="book.name"/></div>
+              <div class="lib-book-author">by <t t-esc="book.author"/></div>
+              <div class="lib-book-footer">
+                <span t-att-class="'lib-status ' + book.state"><t t-esc="book.state"/></span>
+                <span t-if="book.book_type === 'physical'" style="font-size:12px;color:#718096;">
+                  <t t-esc="book.available_copies"/>/<t t-esc="book.total_copies"/> copies
+                </span>
+              </div>
+            </div>
+          </t>
+        </div>
+      </t>
+
+      <!-- MEMBERS TAB -->
+      <t t-if="state.activeTab === 'members' and state.isStaff">
+        <div class="lib-page-header">
+          <h2>👥 Members</h2>
+          <button class="lib-btn lib-btn-primary" t-on-click="() => this.openList('library.member')">+ New Member</button>
+        </div>
+        <t t-foreach="state.members" t-as="member" t-key="member.id">
+          <div class="lib-member-card" t-on-click="() => this.openRecord('library.member', member.id)">
+            <div class="lib-member-avatar"><t t-esc="member.name[0]"/></div>
+            <div class="lib-member-info">
+              <div class="lib-member-name"><t t-esc="member.name"/></div>
+              <div class="lib-member-id"><t t-esc="member.student_id"/> · <t t-esc="member.email"/></div>
+              <div class="lib-member-stats">
+                <span class="lib-member-stat">📚 <t t-esc="member.active_borrows"/>/<t t-esc="member.borrow_limit"/> books</span>
+                <span class="lib-member-stat">🔥 <t t-esc="member.streak"/> streak</span>
+              </div>
+            </div>
+            <span t-att-class="'lib-status ' + member.state"><t t-esc="member.state"/></span>
+          </div>
+        </t>
+      </t>
+
+      <!-- BORROWS TAB -->
+      <t t-if="state.activeTab === 'borrows' and state.isStaff">
+        <div class="lib-page-header"><h2>📋 Borrowings</h2></div>
+        <div class="lib-card lib-animate">
+          <div class="lib-table-wrap">
+            <table class="lib-table">
+              <thead>
+                <tr>
+                  <th>Reference</th><th>Member</th><th>Book</th>
+                  <th>Borrow Date</th><th>Due Date</th><th>Fine</th><th>Status</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-foreach="state.borrows" t-as="borrow" t-key="borrow.id">
+                  <tr t-att-class="borrow.is_overdue ? 'lib-overdue-tr' : ''" t-on-click="() => this.openRecord('library.borrow', borrow.id)">
+                    <td><t t-esc="borrow.name"/></td>
+                    <td><t t-esc="borrow.member_id[1]"/></td>
+                    <td><t t-esc="borrow.book_id[1]"/></td>
+                    <td><t t-esc="borrow.borrow_date"/></td>
+                    <td>
+                      <span t-att-class="borrow.is_overdue ? 'lib-overdue-date' : ''">
+                        <t t-esc="borrow.due_date"/>
+                        <t t-if="borrow.is_overdue"> ⚠️</t>
+                      </span>
+                    </td>
+                    <td>
+                      <span t-if="borrow.fine_amount &gt; 0" class="lib-fine">$<t t-esc="borrow.fine_amount.toFixed(2)"/></span>
+                      <span t-else="">-</span>
+                    </td>
+                    <td><span t-att-class="'lib-status ' + borrow.state"><t t-esc="borrow.state"/></span></td>
+                    <td>
+                      <button t-if="borrow.state === 'borrowed'" class="lib-btn lib-btn-return" t-on-click.stop="() => this.returnBook(borrow.id)">Return</button>
+                    </td>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </t>
+
+      <!-- ROOMS TAB -->
+      <t t-if="state.activeTab === 'rooms'">
+        <div class="lib-page-header"><h2>🚪 Study Rooms</h2></div>
+        <div class="lib-rooms-grid">
+          <t t-foreach="state.rooms" t-as="room" t-key="room.id">
+            <div class="lib-room-card" t-on-click="() => this.openRecord('library.room', room.id)">
+              <div class="lib-room-header">
+                <div class="lib-room-name"><t t-esc="room.name"/></div>
+                <div t-att-class="'lib-traffic-light-large lib-light-' + this.getRoomLight(room)">
+                  <div class="lib-light-dot-large"/>
+                  <span class="lib-light-label">
+                    <t t-if="this.getRoomLight(room) === 'green'">Free</t>
+                    <t t-elif="this.getRoomLight(room) === 'yellow'">Filling</t>
+                    <t t-else="">Full</t>
+                  </span>
+                </div>
+              </div>
+              <div class="lib-occ-bar-wrap">
+                <div class="lib-occ-bar-label">
+                  <span>Occupancy</span>
+                  <span><t t-esc="room.current_occupancy"/>/<t t-esc="room.capacity"/> people</span>
+                </div>
+                <div class="lib-occ-bar-track">
+                  <div t-att-class="'lib-occ-bar-fill lib-occ-' + this.getRoomLight(room)"
+                       t-att-style="'width:' + this.getRoomOccupancyPercent(room) + '%'"/>
+                </div>
+                <div class="lib-occ-percent"><t t-esc="this.getRoomOccupancyPercent(room)"/>%</div>
+              </div>
+              <div t-if="state.isStaff" class="lib-occ-controls" t-on-click.stop="">
+                <button class="lib-occ-btn lib-occ-btn-minus"
+                        t-att-disabled="room.current_occupancy == 0"
+                        t-on-click="() => this.updateOccupancy(room.id, -1)">−</button>
+                <span class="lib-occ-count"><t t-esc="room.current_occupancy"/>/<t t-esc="room.capacity"/></span>
+                <button class="lib-occ-btn lib-occ-btn-plus"
+                        t-att-disabled="room.current_occupancy == room.capacity"
+                        t-on-click="() => this.updateOccupancy(room.id, 1)">+</button>
+              </div>
+              <div class="lib-room-stats">
+                <div t-if="room.has_computers" class="lib-room-stat">
+                  <div class="lib-room-stat-value">💻 <t t-esc="room.computers_available"/>/<t t-esc="room.computer_count"/></div>
+                  <div class="lib-room-stat-label">Computers Free</div>
+                </div>
+                <div class="lib-room-stat">
+                  <div class="lib-room-stat-value">
+                    <t t-if="room.state === 'available'">✅</t>
+                    <t t-elif="room.state === 'occupied'">🔴</t>
+                    <t t-else="">🔧</t>
+                    <t t-esc="room.state"/>
+                  </div>
+                  <div class="lib-room-stat-label">Status</div>
+                </div>
+              </div>
+              <div t-if="room.is_crowded" class="lib-crowded">🔴 Crowded — 80%+ capacity</div>
+            </div>
+          </t>
+        </div>
+      </t>
+
+      <!-- BOOKINGS TAB -->
+      <t t-if="state.activeTab === 'bookings'">
+        <div class="lib-page-header"><h2>📅 Room Bookings</h2></div>
+        <div class="lib-filters">
+          <button t-att-class="'lib-filter-btn' + (state.bookingFilter === 'all' ? ' active' : '')" t-on-click="() => this.setBookingFilter('all')">All</button>
+          <button t-att-class="'lib-filter-btn' + (state.bookingFilter === 'pending' ? ' active' : '')" t-on-click="() => this.setBookingFilter('pending')">⏳ Pending</button>
+          <button t-att-class="'lib-filter-btn' + (state.bookingFilter === 'approved' ? ' active' : '')" t-on-click="() => this.setBookingFilter('approved')">✅ Approved</button>
+          <button t-att-class="'lib-filter-btn' + (state.bookingFilter === 'active' ? ' active' : '')" t-on-click="() => this.setBookingFilter('active')">🟢 Active</button>
+          <button t-att-class="'lib-filter-btn' + (state.bookingFilter === 'done' ? ' active' : '')" t-on-click="() => this.setBookingFilter('done')">🏁 Done</button>
+        </div>
+        <t t-foreach="state.bookings" t-as="booking" t-key="booking.id">
+          <div t-att-class="'lib-booking-card ' + booking.state">
+            <div class="lib-booking-main">
+              <div>
+                <div class="lib-booking-title"><t t-esc="booking.name"/></div>
+                <div class="lib-booking-detail">🚪 <t t-esc="booking.room_id[1]"/></div>
+                <div class="lib-booking-detail">⏰ <t t-esc="booking.start_time"/> → <t t-esc="booking.end_time"/></div>
+                <div class="lib-booking-detail">⏱ <t t-esc="booking.duration_hours"/> hours</div>
+              </div>
+              <div>
+                <span t-att-class="'lib-status ' + booking.state"><t t-esc="booking.state"/></span>
+                <div t-if="state.isStaff" class="lib-booking-actions">
+                  <button t-if="booking.state === 'pending'" class="lib-btn lib-btn-approve" t-on-click="() => this.approveBooking(booking.id)">✓ Approve</button>
+                  <button t-if="booking.state === 'pending'" class="lib-btn lib-btn-reject" t-on-click="() => this.rejectBooking(booking.id)">✗ Reject</button>
+                  <button t-if="booking.state === 'approved'" class="lib-btn lib-btn-checkin" t-on-click="() => this.checkinBooking(booking.id)">Check In</button>
+                  <button t-if="booking.state === 'active'" class="lib-btn lib-btn-checkout" t-on-click="() => this.checkoutBooking(booking.id)">Check Out</button>
+                </div>
+              </div>
+            </div>
+            <div t-if="booking.qr_code" class="lib-qr-section">
+              <div class="lib-qr-label">📱 QR Code — Hover to enlarge</div>
+              <img t-att-src="'data:image/png;base64,' + booking.qr_code" class="lib-qr-img" alt="QR Code"/>
+            </div>
+          </div>
+        </t>
+      </t>
+
+      <!-- SETTINGS TAB -->
+      <t t-if="state.activeTab === 'settings' and state.isAdmin">
+        <div class="lib-page-header"><h2>⚙ Library Settings</h2></div>
+        <div class="lib-settings-card lib-animate">
+          <div class="lib-setting-item">
+            <div class="lib-setting-info">
+              <h4>Show Announcement Banner</h4>
+              <p>Display an announcement to all library users</p>
+            </div>
+            <label class="lib-toggle">
+              <input type="checkbox" t-model="state.showAnnouncement" t-on-change="() => this.saveSetting('library.show_warning', state.showAnnouncement)"/>
+              <span class="lib-toggle-slider"/>
+            </label>
+          </div>
+          <div t-if="state.showAnnouncement" class="lib-setting-item">
+            <div class="lib-setting-info">
+              <h4>Announcement Message</h4>
+              <textarea style="width:400px;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;"
+                t-model="state.announcement"
+                t-on-blur="() => this.saveSetting('library.warning_message', state.announcement)"
+                placeholder="Type your announcement..."/>
+            </div>
+          </div>
+        </div>
+      </t>
+
+    </div>
+  </div>
+</t>
+</templates>

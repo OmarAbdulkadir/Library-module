@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_library_dashboard" model="ir.actions.client">
+        <field name="name">Library Dashboard</field>
+        <field name="tag">library.dashboard</field>
+    </record>
+</odoo>

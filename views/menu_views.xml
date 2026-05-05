@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_library_root"
+              name="Library"
+              action="action_library_dashboard"
+              sequence="10"
+              web_icon="library,static/description/icon.png"/>
+
+    <menuitem id="menu_library_books"
+              name="Books"
+              parent="menu_library_root"
+              action="action_library_book"
+              sequence="10"/>
+
+    <menuitem id="menu_library_members"
+              name="Members"
+              parent="menu_library_root"
+              action="action_library_member"
+              sequence="20"
+              groups="library.group_library_staff"/>
+
+    <menuitem id="menu_library_borrowings"
+              name="Borrowings"
+              parent="menu_library_root"
+              action="action_library_borrow"
+              sequence="30"
+              groups="library.group_library_staff"/>
+
+    <menuitem id="menu_library_rooms"
+              name="Rooms"
+              parent="menu_library_root"
+              action="action_library_room"
+              sequence="40"/>
+
+    <menuitem id="menu_library_room_bookings"
+              name="Room Bookings"
+              parent="menu_library_root"
+              action="action_library_room_booking"
+              sequence="50"/>
+
+    <menuitem id="menu_library_users"
+              name="Library Users"
+              parent="menu_library_root"
+              action="action_library_create_user"
+              sequence="60"
+              groups="library.group_library_staff"/>
+
+</odoo>

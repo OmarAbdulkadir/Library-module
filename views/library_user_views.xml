@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_library_user_wizard_form" model="ir.ui.view">
+        <field name="name">library.user.wizard.form</field>
+        <field name="model">library.user.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Library User">
+                <sheet>
+                    <group>
+                        <field name="name" placeholder="Full Name"/>
+                        <field name="email" placeholder="email@example.com"/>
+                        <field name="password" password="True"/>
+                        <field name="user_type"
+                               groups="library.group_library_admin"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_create_user" string="Create User"
+                            type="object" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_library_create_user" model="ir.actions.act_window">
+        <field name="name">Create Library User</field>
+        <field name="res_model">library.user.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

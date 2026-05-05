@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_library_book_form" model="ir.ui.view">
+        <field name="name">library.book.form</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="available,borrowed,sold_out"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Book Title"/></h1>
+                    </div>
+                    <group>
+                        <group string="Book Details">
+                            <field name="author"/>
+                            <field name="isbn"/>
+                            <field name="edition"/>
+                            <field name="volume"/>
+                            <field name="category"/>
+                            <field name="language"/>
+                            <field name="publish_year"/>
+                        </group>
+                        <group string="Type and Availability">
+                            <field name="book_type"/>
+                            <field name="download_url"
+                                   invisible="book_type != 'ebook'"/>
+                            <field name="total_copies"
+                                   invisible="book_type == 'ebook'"/>
+                            <field name="available_copies"
+                                   invisible="book_type == 'ebook'"/>
+                            <field name="for_sale"/>
+                            <field name="price"
+                                   invisible="not for_sale"/>
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_library_book_list" model="ir.ui.view">
+        <field name="name">library.book.list</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="author"/>
+                <field name="book_type"/>
+                <field name="edition"/>
+                <field name="available_copies"/>
+                <field name="state"
+                       decoration-success="state == 'available'"
+                       decoration-danger="state == 'borrowed'"
+                       decoration-warning="state == 'sold_out'"/>
+                <field name="for_sale"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_library_book_search" model="ir.ui.view">
+        <field name="name">library.book.search</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="author"/>
+                <field name="isbn"/>
+                <filter string="Available" name="available"
+                        domain="[('state','=','available')]"/>
+                <separator/>
+                <filter string="📚 Physical Books" name="physical"
+                        domain="[('book_type','=','physical')]"/>
+                <filter string="💻 E-Books" name="ebook"
+                        domain="[('book_type','=','ebook')]"/>
+                <separator/>
+                <filter string="For Sale" name="for_sale"
+                        domain="[('for_sale','=',True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Book Type" name="group_type"
+                            context="{'group_by': 'book_type'}"/>
+                    <filter string="Status" name="group_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_library_book" model="ir.actions.act_window">
+        <field name="name">Books</field>
+        <field name="res_model">library.book</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_library_book_search"/>
+    </record>
+
+</odoo>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_library" model="ir.ui.view">
+        <field name="name">res.config.settings.view.library</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='general_settings']" position="after">
+                <app string="Library" name="library" logo="/library/static/description/icon.png"
+                     groups="library.group_library_admin">
+                    <block title="Borrowing">
+                        <setting string="Enable Borrowing System"
+                                 help="Enable or disable the book borrowing system">
+                            <field name="library_enable_borrowing"/>
+                        </setting>
+                    </block>
+                    <block title="E-Books">
+                        <setting string="Enable E-Books"
+                                 help="Enable or disable E-Books in the library">
+                            <field name="library_enable_ebooks"/>
+                        </setting>
+                    </block>
+                    <block title="Announcements">
+                        <setting string="Show Announcement Banner"
+                                 help="Display an announcement to all library users">
+                            <field name="library_show_warning"/>
+                        </setting>
+                        <setting string="Announcement Message"
+                                 invisible="not library_show_warning">
+                            <field name="library_warning_message"
+                                   placeholder="Type your announcement here..."/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
