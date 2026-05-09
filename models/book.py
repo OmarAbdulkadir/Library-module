@@ -31,6 +31,8 @@ class LibraryBook(models.Model):
     language = fields.Char(string='Language', default='English')
     publish_year = fields.Integer(string='Publish Year')
     active = fields.Boolean(string='Active', default=True)
+    cover_image = fields.Binary(string='Cover Image', attachment=True)
+    cover_image_filename = fields.Char(string='Cover Filename')
 
     @api.depends('borrow_ids', 'borrow_ids.state', 'total_copies')
     def _compute_available_copies(self):

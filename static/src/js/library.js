@@ -16,6 +16,9 @@ class LibraryDashboard extends Component {
             borrows: [],
             rooms: [],
             bookings: [],
+            schedule: {},
+            scheduleDate: "",
+            scheduleOffset: 0,
             loading: true,
             bookFilter: "all",
             bookingFilter: "all",
@@ -42,7 +45,6 @@ class LibraryDashboard extends Component {
             this._updateClock();
             this._clockInterval = setInterval(() => this._updateClock(), 1000);
             this._initScrollAnimations();
-            this._fixScroll();
         });
 
         onWillUnmount(() => {
@@ -51,7 +53,6 @@ class LibraryDashboard extends Component {
     }
 
     async detectUserRole() {
-        // Step 1 — try admin (only admin can read ir.config_parameter)
         try {
             await this.orm.searchRead("ir.config_parameter",
                 [["key", "=", "library.show_warning"]], ["key"], { limit: 1 });
@@ -61,33 +62,29 @@ class LibraryDashboard extends Component {
             return;
         } catch(e) {}
 
-        // Step 2 — try staff (only staff/admin can write library.member)
-        // Portal can READ member but cannot CREATE — use create to distinguish
         try {
-            // Try to read res.users with share field
-            // Portal users have share = true, internal users have share = false
             const result = await this.orm.searchRead("res.users",
-                [["share", "=", true]], ["id"], { limit: 1 });
-            // If we can search with share=true domain and get results
-            // it means we are an internal user (staff) who can see portal users
-            // Portal users themselves cannot filter by share field this way
-            this.state.isAdmin = false;
-            this.state.isStaff = true;
-            this.state.isPortal = false;
-            return;
-        } catch(e) {
-            // Cannot access this — we are portal
-            this.state.isAdmin = false;
-            this.state.isStaff = false;
-            this.state.isPortal = true;
-            return;
-        }
-    }
+                [], ["groups_id"], { limit: 1 });
+            if (result.length) {
+                const groups = result[0].groups_id;
+                if (groups.includes(45)) {
+                    this.state.isAdmin = false;
+                    this.state.isStaff = false;
+                    this.state.isPortal = true;
+                    return;
+                }
+                if (groups.includes(46)) {
+                    this.state.isAdmin = false;
+                    this.state.isStaff = true;
+                    this.state.isPortal = false;
+                    return;
+                }
+            }
+        } catch(e) {}
 
-    _fixScroll() {
-        const s = document.createElement('style');
-        s.innerHTML = '.o_web_client,.o_action_manager,.lib-dashboard{height:100%;overflow-y:auto;}.lib-content{flex:1 1 auto;min-height:0;}';
-        document.head.appendChild(s);
+        this.state.isAdmin = false;
+        this.state.isStaff = true;
+        this.state.isPortal = false;
     }
 
     _updateClock() {
@@ -147,6 +144,7 @@ class LibraryDashboard extends Component {
                 this.loadRooms(),
                 this.loadBookings(),
                 this.loadSettings(),
+                this.loadSchedule(),
             ]);
             this._computeAmbientMood();
             this._computeMostBorrowedBook();
@@ -211,6 +209,33 @@ class LibraryDashboard extends Component {
                 ["name", "member_id", "room_id", "start_time", "end_time", "duration_hours", "state", "qr_code"],
                 { order: "id desc" });
         } catch(e) {}
+    }
+
+    async loadSchedule() {
+        const today = new Date();
+        today.setDate(today.getDate() + (this.state.scheduleOffset || 0));
+        const dateStr = today.toISOString().split('T')[0];
+        this.state.scheduleDate = dateStr;
+        try {
+            const bookings = await this.orm.searchRead(
+                "library.room.booking",
+                [["booking_date", "=", dateStr], ["state", "in", ["pending", "approved", "active"]]],
+                ["room_id", "time_slot", "member_id", "state", "group_size"]
+            );
+            const grid = {};
+            bookings.forEach(b => {
+                const key = b.room_id[0] + "-" + b.time_slot;
+                grid[key] = {
+                    state: b.state,
+                    member: b.member_id ? b.member_id[1] : "",
+                    group_size: b.group_size,
+                    id: b.id,
+                };
+            });
+            this.state.schedule = grid;
+        } catch(e) {
+            this.state.schedule = {};
+        }
     }
 
     async loadSettings() {
@@ -285,6 +310,7 @@ class LibraryDashboard extends Component {
         await this.loadBookings();
         await this.loadStats();
         await this.loadRooms();
+        await this.loadSchedule();
         this._computeAmbientMood();
         this.notification.add("Booking approved!", { type: "success" });
     }
@@ -293,6 +319,7 @@ class LibraryDashboard extends Component {
         await this.orm.call("library.room.booking", "action_reject", [[id]]);
         await this.loadBookings();
         await this.loadStats();
+        await this.loadSchedule();
         this.notification.add("Booking rejected!", { type: "warning" });
     }
 
@@ -300,6 +327,7 @@ class LibraryDashboard extends Component {
         await this.orm.call("library.room.booking", "action_checkin", [[id]]);
         await this.loadBookings();
         await this.loadRooms();
+        await this.loadSchedule();
         this._computeAmbientMood();
         this.notification.add("Checked in!", { type: "success" });
     }
@@ -308,6 +336,7 @@ class LibraryDashboard extends Component {
         await this.orm.call("library.room.booking", "action_checkout", [[id]]);
         await this.loadBookings();
         await this.loadRooms();
+        await this.loadSchedule();
         this._computeAmbientMood();
         this.notification.add("Checked out!", { type: "success" });
     }
@@ -325,6 +354,33 @@ class LibraryDashboard extends Component {
         await this.orm.call("ir.config_parameter", "set_param", [key, String(value)]);
         await this.loadSettings();
         this.notification.add("Settings saved!", { type: "success" });
+    }
+
+    async changeScheduleDay(delta) {
+        this.state.scheduleOffset = (this.state.scheduleOffset || 0) + delta;
+        if (this.state.scheduleOffset < 0) this.state.scheduleOffset = 0;
+        await this.loadSchedule();
+    }
+
+    getSlotStatus(roomId, slot) {
+        const key = roomId + "-" + slot;
+        const data = this.state.schedule[key];
+        if (!data) return null;
+        return data;
+    }
+
+    bookSlot(roomId, slot) {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "library.room.booking",
+            views: [[false, "form"]],
+            target: "current",
+            context: {
+                default_room_id: roomId,
+                default_time_slot: slot,
+                default_booking_date: this.state.scheduleDate,
+            }
+        });
     }
 
     openRecord(model, id) {
@@ -349,4 +405,3 @@ class LibraryDashboard extends Component {
 
 LibraryDashboard.template = "library.Dashboard";
 registry.category("actions").add("library.dashboard", LibraryDashboard);
-

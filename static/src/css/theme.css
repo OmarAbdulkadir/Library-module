@@ -1,0 +1,186 @@
+/* OSTIM Library Theme - Safe Override */
+
+/* Navbar */
+.o_main_navbar {
+    background-color: #0f1724 !important;
+    border-bottom: 1px solid #1e2d42 !important;
+}
+.o_main_navbar .o_menu_brand {
+    color: #4e9eff !important;
+    font-weight: 700 !important;
+}
+.o_main_navbar > ul > li > a,
+.o_main_navbar > ul > li > .dropdown-toggle {
+    color: #8899aa !important;
+}
+.o_main_navbar > ul > li > a:hover,
+.o_main_navbar > ul > li > .dropdown-toggle:hover {
+    color: #fff !important;
+    background: #1a2740 !important;
+}
+.o_main_navbar .o_menu_systray > li > a {
+    color: #8899aa !important;
+}
+
+/* Page background */
+.o_action_manager {
+    background: #0d1826 !important;
+}
+.o_content {
+    background: #0d1826 !important;
+}
+
+/* Control panel */
+.o_control_panel {
+    background: #111d2e !important;
+    border-bottom: 1px solid #1e2d42 !important;
+}
+.o_control_panel .breadcrumb-item > a {
+    color: #8899aa !important;
+}
+.o_control_panel .breadcrumb-item.active {
+    color: #4e9eff !important;
+}
+
+/* Buttons */
+.btn-primary {
+    background: #4e9eff !important;
+    border-color: #4e9eff !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+}
+.btn-primary:hover {
+    background: #3a8aee !important;
+    border-color: #3a8aee !important;
+}
+.btn-secondary {
+    background: #111d2e !important;
+    border: 1px solid #1e2d42 !important;
+    color: #8899aa !important;
+    border-radius: 8px !important;
+}
+.btn-secondary:hover {
+    background: #1a2740 !important;
+    color: #fff !important;
+    border-color: #1e2d42 !important;
+}
+
+/* Search bar */
+.o_searchview {
+    background: #111d2e !important;
+    border: 1px solid #1e2d42 !important;
+    border-radius: 8px !important;
+}
+.o_searchview .o_searchview_input {
+    color: #fff !important;
+}
+.o_searchview .o_searchview_input::placeholder {
+    color: #8899aa !important;
+}
+
+/* List view */
+.o_list_view .o_data_row {
+    background: #111d2e !important;
+}
+.o_list_view .o_data_row:hover {
+    background: #152033 !important;
+}
+.o_list_view thead tr {
+    background: #0d1826 !important;
+}
+.o_list_view thead th {
+    color: #4e9eff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    border-bottom: 1px solid #1e2d42 !important;
+}
+.o_list_view td {
+    color: #cbd5e1 !important;
+    border-color: #1e2d42 !important;
+}
+
+/* Form view */
+.o_form_sheet {
+    background: #111d2e !important;
+    border-radius: 12px !important;
+    border: 1px solid #1e2d42 !important;
+}
+.o_form_sheet_bg {
+    background: #0d1826 !important;
+}
+.o_field_widget {
+    color: #e2e8f0 !important;
+}
+.o_form_label {
+    color: #8899aa !important;
+    font-size: 12px !important;
+}
+
+/* Status bar */
+.o_statusbar_status .btn {
+    background: #0d1826 !important;
+    border: 1px solid #1e2d42 !important;
+    color: #8899aa !important;
+    border-radius: 6px !important;
+}
+.o_statusbar_status .btn.o_arrow_button_current {
+    background: #1a3a6b !important;
+    border-color: #4e9eff !important;
+    color: #4e9eff !important;
+}
+
+/* Badges */
+.badge.text-bg-success { background: #0d2e1a !important; color: #4ade80 !important; border: 1px solid #166534 !important; border-radius: 20px !important; }
+.badge.text-bg-danger  { background: #2e0d0d !important; color: #f87171 !important; border: 1px solid #7f1d1d !important; border-radius: 20px !important; }
+.badge.text-bg-warning { background: #2e2208 !important; color: #fbbf24 !important; border: 1px solid #78350f !important; border-radius: 20px !important; }
+.badge.text-bg-info    { background: #0d1e2e !important; color: #60a5fa !important; border: 1px solid #1e3a5f !important; border-radius: 20px !important; }
+
+/* Dropdown menus */
+.dropdown-menu {
+    background: #111d2e !important;
+    border: 1px solid #1e2d42 !important;
+    border-radius: 10px !important;
+}
+.dropdown-item {
+    color: #cbd5e1 !important;
+    border-radius: 6px !important;
+}
+.dropdown-item:hover, .dropdown-item:focus {
+    background: #1a2740 !important;
+    color: #fff !important;
+}
+
+/* Modals */
+.modal-content {
+    background: #111d2e !important;
+    border: 1px solid #1e2d42 !important;
+    border-radius: 14px !important;
+}
+.modal-header {
+    background: #0d1826 !important;
+    border-bottom: 1px solid #1e2d42 !important;
+}
+.modal-title { color: #fff !important; }
+.modal-body { color: #cbd5e1 !important; }
+.modal-footer {
+    background: #0d1826 !important;
+    border-top: 1px solid #1e2d42 !important;
+}
+.btn-close { filter: invert(1) !important; opacity: 0.6 !important; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0d1826; }
+::-webkit-scrollbar-thumb { background: #1e2d42; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4e9eff; }
+
+/* Chatter */
+.o-mail-Message {
+    background: #111d2e !important;
+    border: 1px solid #1e2d42 !important;
+    border-radius: 8px !important;
+}
+.o-mail-Message-author { color: #4e9eff !important; }
+.o-mail-Message-date { color: #8899aa !important; }

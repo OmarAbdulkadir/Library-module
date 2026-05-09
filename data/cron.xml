@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="ir_cron_auto_cancel_bookings" model="ir.cron">
+        <field name="name">Library: Auto Cancel Late Bookings</field>
+        <field name="model_id" ref="model_library_room_booking"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_auto_cancel()</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
+    <record id="ir_cron_cleanup_old_bookings" model="ir.cron">
+        <field name="name">Library: Cleanup Old Bookings</field>
+        <field name="model_id" ref="model_library_room_booking"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_cleanup()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

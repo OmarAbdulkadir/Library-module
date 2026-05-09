@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
     <record id="view_library_member_form" model="ir.ui.view">
         <field name="name">library.member.form</field>
         <field name="model">library.member</field>
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_suspend" string="Suspend"
-                            type="object" class="oe_highlight"
-                            invisible="state == 'suspended'"/>
-                    <button name="action_activate" string="Activate"
-                            type="object" class="oe_highlight"
-                            invisible="state == 'active'"/>
-                    <field name="state" widget="statusbar"/>
+                    <button name="action_suspend" string="Suspend" type="object"
+                            class="btn-warning" invisible="state == 'suspended'"/>
+                    <button name="action_activate" string="Activate" type="object"
+                            class="btn-success" invisible="state == 'active'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="active,suspended"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -54,22 +52,15 @@
                                     <field name="room_id"/>
                                     <field name="start_time"/>
                                     <field name="end_time"/>
-                                    <field name="duration_hours"/>
                                     <field name="state"/>
                                 </list>
                             </field>
                         </page>
                     </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
-
     <record id="view_library_member_list" model="ir.ui.view">
         <field name="name">library.member.list</field>
         <field name="model">library.member</field>
@@ -80,6 +71,7 @@
                 <field name="email"/>
                 <field name="borrow_limit"/>
                 <field name="active_borrows"/>
+                <field name="total_borrows"/>
                 <field name="streak"/>
                 <field name="state"
                        decoration-success="state == 'active'"
@@ -87,11 +79,9 @@
             </list>
         </field>
     </record>
-
     <record id="action_library_member" model="ir.actions.act_window">
         <field name="name">Members</field>
         <field name="res_model">library.member</field>
         <field name="view_mode">list,form</field>
     </record>
-
 </odoo>

@@ -86,3 +86,15 @@ class LibraryBorrow(models.Model):
             'is_overdue': False,
             'fine_amount': 0.0,
         })
+    def action_renew(self):
+        for rec in self:
+            if rec.state != 'borrowed':
+                raise ValidationError('Can only renew active borrows!')
+            from datetime import timedelta
+            rec.due_date = rec.due_date + timedelta(days=7)
+            rec.message_post(body=f"Borrow renewed. New due date: {rec.due_date}")
+
+    def action_pay_fine(self):
+        for rec in self:
+            rec.fine_amount = 0.0
+            rec.message_post(body="Fine paid and cleared.")

@@ -6,22 +6,23 @@
     <div class="lib-navbar">
       <div class="lib-navbar-brand">
         <span class="brand-icon">📚</span>
-        <span class="brand-name">University Library</span>
+        <span class="brand-name">OSTIM University Library</span>
       </div>
       <div class="lib-navbar-tabs">
-        <button class="lib-nav-tab" t-att-class="state.activeTab === 'dashboard' ? 'active' : ''" t-on-click="() => this.setTab('dashboard')" data-tooltip="Overview">🏠 Dashboard</button>
-        <button class="lib-nav-tab" t-att-class="state.activeTab === 'books' ? 'active' : ''" t-on-click="() => this.setTab('books')" data-tooltip="Browse Books">📖 Books</button>
-        <button t-if="state.isStaff" class="lib-nav-tab" t-att-class="state.activeTab === 'members' ? 'active' : ''" t-on-click="() => this.setTab('members')" data-tooltip="Library Members">👥 Members</button>
-        <button t-if="state.isStaff" class="lib-nav-tab" t-att-class="state.activeTab === 'borrows' ? 'active' : ''" t-on-click="() => this.setTab('borrows')" data-tooltip="Active Borrowings">
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'dashboard' ? 'active' : ''" t-on-click="() => this.setTab('dashboard')">🏠 Dashboard</button>
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'books' ? 'active' : ''" t-on-click="() => this.setTab('books')">📖 Books</button>
+        <button t-if="state.isStaff" class="lib-nav-tab" t-att-class="state.activeTab === 'members' ? 'active' : ''" t-on-click="() => this.setTab('members')">👥 Members</button>
+        <button t-if="state.isStaff" class="lib-nav-tab" t-att-class="state.activeTab === 'borrows' ? 'active' : ''" t-on-click="() => this.setTab('borrows')">
           📋 Borrowings
-          <span t-if="state.stats.overdueCount &gt; 0" class="tab-badge overdue-badge"><t t-esc="state.stats.overdueCount"/> overdue</span>
+          <span t-if="state.stats.overdueCount &gt; 0" class="tab-badge overdue-badge"><t t-esc="state.stats.overdueCount"/></span>
         </button>
-        <button class="lib-nav-tab" t-att-class="state.activeTab === 'rooms' ? 'active' : ''" t-on-click="() => this.setTab('rooms')" data-tooltip="Study Rooms">🚪 Rooms</button>
-        <button class="lib-nav-tab" t-att-class="state.activeTab === 'bookings' ? 'active' : ''" t-on-click="() => this.setTab('bookings')" data-tooltip="Room Bookings">
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'rooms' ? 'active' : ''" t-on-click="() => this.setTab('rooms')">🚪 Rooms</button>
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'schedule' ? 'active' : ''" t-on-click="() => this.setTab('schedule')">🗓 Schedule</button>
+        <button class="lib-nav-tab" t-att-class="state.activeTab === 'bookings' ? 'active' : ''" t-on-click="() => this.setTab('bookings')">
           📅 Bookings
           <span t-if="state.isStaff and state.stats.pendingBookings &gt; 0" class="tab-badge"><t t-esc="state.stats.pendingBookings"/></span>
         </button>
-        <button t-if="state.isAdmin" class="lib-nav-tab" t-att-class="state.activeTab === 'settings' ? 'active' : ''" t-on-click="() => this.setTab('settings')" data-tooltip="Library Settings">⚙ Settings</button>
+        <button t-if="state.isAdmin" class="lib-nav-tab" t-att-class="state.activeTab === 'settings' ? 'active' : ''" t-on-click="() => this.setTab('settings')">⚙ Settings</button>
       </div>
       <div class="lib-navbar-right">
         <div class="lib-clock"><t t-esc="state.currentTime"/></div>
@@ -41,7 +42,7 @@
     </div>
 
     <div t-if="state.isStaff and state.stats.overdueCount &gt; 0" class="lib-overdue-alert">
-      ⚠️ <strong><t t-esc="state.stats.overdueCount"/> overdue book(s)</strong> — please follow up with members
+      ⚠ <strong><t t-esc="state.stats.overdueCount"/> overdue book(s)</strong> — please follow up with members
       <button class="lib-btn-inline" t-on-click="() => this.setTab('borrows')">View →</button>
     </div>
 
@@ -71,8 +72,8 @@
             <div class="lib-mood-sub">
               <t t-if="state.ambientMood === 'quiet'">Great time to find a quiet spot 😌</t>
               <t t-elif="state.ambientMood === 'moderate'">Rooms are filling up — book early 📅</t>
-              <t t-elif="state.ambientMood === 'busy'">Very busy today — limited space available ⚠️</t>
-              <t t-else="">All rooms near capacity — check back later 🚫</t>
+              <t t-elif="state.ambientMood === 'busy'">Very busy today — limited space ⚠</t>
+              <t t-else="">All rooms near capacity 🚫</t>
             </div>
           </div>
         </div>
@@ -115,10 +116,10 @@
         </div>
 
         <div class="lib-room-quick lib-animate">
-          <div class="lib-room-quick-title">🚦 Room Status</div>
+          <div class="lib-room-quick-title">🚦 Room Status — <span style="font-size:12px;font-weight:400;opacity:0.7;">Click to view schedule</span></div>
           <div class="lib-room-quick-grid">
             <t t-foreach="state.rooms" t-as="room" t-key="room.id">
-              <div class="lib-room-quick-item" t-on-click="() => this.setTab('rooms')">
+              <div class="lib-room-quick-item" t-on-click="() => this.setTab('schedule')">
                 <div t-att-class="'lib-traffic-light lib-light-' + this.getRoomLight(room)">
                   <div class="lib-light-dot"/>
                 </div>
@@ -167,8 +168,7 @@
               No borrowings yet
             </div>
             <t t-foreach="state.borrows.slice(0,5)" t-as="borrow" t-key="borrow.id">
-              <div t-att-class="'lib-member-card' + (borrow.is_overdue ? ' lib-overdue-row' : '')"
-                   t-on-click="() => this.openRecord('library.borrow', borrow.id)">
+              <div t-att-class="'lib-member-card' + (borrow.is_overdue ? ' lib-overdue-row' : '')" t-on-click="() => this.openRecord('library.borrow', borrow.id)">
                 <div class="lib-member-avatar">📖</div>
                 <div class="lib-member-info">
                   <div class="lib-member-name"><t t-esc="borrow.name"/></div>
@@ -182,7 +182,6 @@
           </div>
         </div>
 
-        <!-- STUDENT DASHBOARD -->
         <div t-if="state.isPortal" class="lib-dashboard-grid">
           <div class="lib-card lib-animate">
             <div class="lib-card-header"><h3>📖 Available Books</h3></div>
@@ -201,13 +200,16 @@
             </t>
           </div>
           <div class="lib-card lib-animate">
-            <div class="lib-card-header"><h3>🚪 Available Rooms</h3></div>
+            <div class="lib-card-header">
+              <h3>🗓 Book a Room</h3>
+              <button class="lib-btn lib-btn-primary" t-on-click="() => this.setTab('schedule')">View Schedule</button>
+            </div>
             <t t-foreach="state.rooms.filter(r => r.state === 'available').slice(0,4)" t-as="room" t-key="room.id">
-              <div class="lib-member-card" t-on-click="() => this.setTab('rooms')">
+              <div class="lib-member-card" t-on-click="() => this.setTab('schedule')">
                 <div class="lib-member-avatar">🚪</div>
                 <div class="lib-member-info">
                   <div class="lib-member-name"><t t-esc="room.name"/></div>
-                  <div class="lib-member-id">Occupancy: <t t-esc="room.current_occupancy"/>/<t t-esc="room.capacity"/></div>
+                  <div class="lib-member-id">Capacity: <t t-esc="room.capacity"/> people</div>
                 </div>
                 <span t-if="room.is_crowded" class="lib-status borrowed">Crowded</span>
                 <span t-else="" class="lib-status available">Available</span>
@@ -293,7 +295,7 @@
                     <td>
                       <span t-att-class="borrow.is_overdue ? 'lib-overdue-date' : ''">
                         <t t-esc="borrow.due_date"/>
-                        <t t-if="borrow.is_overdue"> ⚠️</t>
+                        <t t-if="borrow.is_overdue"> ⚠</t>
                       </span>
                     </td>
                     <td>
@@ -314,7 +316,10 @@
 
       <!-- ROOMS TAB -->
       <t t-if="state.activeTab === 'rooms'">
-        <div class="lib-page-header"><h2>🚪 Study Rooms</h2></div>
+        <div class="lib-page-header">
+          <h2>🚪 Study Rooms</h2>
+          <button class="lib-btn lib-btn-primary" t-on-click="() => this.setTab('schedule')">🗓 View Schedule</button>
+        </div>
         <div class="lib-rooms-grid">
           <t t-foreach="state.rooms" t-as="room" t-key="room.id">
             <div class="lib-room-card" t-on-click="() => this.openRecord('library.room', room.id)">
@@ -341,13 +346,9 @@
                 <div class="lib-occ-percent"><t t-esc="this.getRoomOccupancyPercent(room)"/>%</div>
               </div>
               <div t-if="state.isStaff" class="lib-occ-controls" t-on-click.stop="">
-                <button class="lib-occ-btn lib-occ-btn-minus"
-                        t-att-disabled="room.current_occupancy == 0"
-                        t-on-click="() => this.updateOccupancy(room.id, -1)">−</button>
+                <button class="lib-occ-btn lib-occ-btn-minus" t-att-disabled="room.current_occupancy == 0" t-on-click="() => this.updateOccupancy(room.id, -1)">−</button>
                 <span class="lib-occ-count"><t t-esc="room.current_occupancy"/>/<t t-esc="room.capacity"/></span>
-                <button class="lib-occ-btn lib-occ-btn-plus"
-                        t-att-disabled="room.current_occupancy == room.capacity"
-                        t-on-click="() => this.updateOccupancy(room.id, 1)">+</button>
+                <button class="lib-occ-btn lib-occ-btn-plus" t-att-disabled="room.current_occupancy == room.capacity" t-on-click="() => this.updateOccupancy(room.id, 1)">+</button>
               </div>
               <div class="lib-room-stats">
                 <div t-if="room.has_computers" class="lib-room-stat">
@@ -370,9 +371,111 @@
         </div>
       </t>
 
+      <!-- SCHEDULE TAB -->
+      <t t-if="state.activeTab === 'schedule'">
+        <div class="lib-page-header">
+          <h2>🗓 Room Schedule</h2>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="lib-btn lib-btn-primary" t-on-click="() => this.changeScheduleDay(-1)" t-att-disabled="(state.scheduleOffset || 0) === 0">← Prev</button>
+            <span style="font-size:14px;font-weight:700;color:#1E3A5F;background:#EBF8FF;padding:6px 16px;border-radius:8px;"><t t-esc="state.scheduleDate"/></span>
+            <button class="lib-btn lib-btn-primary" t-on-click="() => this.changeScheduleDay(1)">Next →</button>
+          </div>
+        </div>
+
+        <div class="lib-card lib-animate" style="overflow-x:auto;padding:0;">
+          <table style="width:100%;border-collapse:collapse;min-width:500px;">
+            <thead>
+              <tr>
+                <th style="padding:14px 16px;background:#1E3A5F;color:white;font-size:11px;font-weight:700;text-align:left;letter-spacing:0.5px;">TIME SLOT</th>
+                <t t-foreach="state.rooms" t-as="room" t-key="room.id">
+                  <th style="padding:14px 12px;background:#1E3A5F;color:white;font-size:11px;font-weight:700;text-align:center;letter-spacing:0.5px;">
+                    <div><t t-esc="room.name"/></div>
+                    <div style="font-size:10px;font-weight:400;opacity:0.75;margin-top:3px;">
+                      Cap: <t t-esc="room.capacity"/>
+                      <t t-if="room.has_computers"> · <t t-esc="room.computers_available"/> PC free</t>
+                    </div>
+                  </th>
+                </t>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-foreach="[['08:30','08:30 - 10:30'],['10:30','10:30 - 12:30'],['12:30','12:30 - 14:30'],['14:30','14:30 - 16:30'],['16:30','16:30 - 18:30'],['18:30','18:30 - 20:30'],['20:30','20:30 - 22:30']]" t-as="slot" t-key="slot[0]">
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:10px 16px;font-size:13px;font-weight:700;color:#1E3A5F;background:#f8fafc;white-space:nowrap;border-right:2px solid #e2e8f0;">
+                    <t t-esc="slot[1]"/>
+                  </td>
+                  <t t-foreach="state.rooms" t-as="room" t-key="room.id">
+                    <t t-set="slotKey" t-value="room.id + '-' + slot[0]"/>
+                    <t t-set="slotData" t-value="state.schedule[slotKey]"/>
+                    <td style="padding:8px;text-align:center;border-right:1px solid #f0f4f8;">
+
+                      <t t-if="!slotData">
+                        <div style="background:#f0fff4;border:1px solid #9ae6b4;border-radius:8px;padding:10px 6px;cursor:pointer;" t-on-click="() => this.bookSlot(room.id, slot[0])">
+                          <div style="color:#276749;font-size:11px;font-weight:700;margin-bottom:4px;">✓ AVAILABLE</div>
+                          <button style="background:#38a169;color:white;border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:600;">Book Now</button>
+                        </div>
+                      </t>
+
+                      <t t-elif="slotData.state === 'pending'">
+                        <div style="background:#fffbeb;border:1px solid #f6e05e;border-radius:8px;padding:10px 6px;">
+                          <div style="color:#744210;font-size:11px;font-weight:700;">⏳ PENDING</div>
+                          <t t-if="state.isStaff">
+                            <div style="font-size:10px;color:#744210;margin-top:3px;font-weight:600;"><t t-esc="slotData.member"/></div>
+                            <div style="font-size:10px;color:#92400e;"><t t-esc="slotData.group_size"/> people</div>
+                          </t>
+                          <t t-else="">
+                            <div style="font-size:10px;color:#92400e;margin-top:3px;">Awaiting approval</div>
+                          </t>
+                        </div>
+                      </t>
+
+                      <t t-else="">
+                        <div t-att-style="slotData.state === 'active' ? 'background:#ebfff4;border:1px solid #68d391;border-radius:8px;padding:10px 6px;' : 'background:#fff5f5;border:1px solid #feb2b2;border-radius:8px;padding:10px 6px;'">
+                          <div t-att-style="slotData.state === 'active' ? 'color:#276749;font-size:11px;font-weight:700;' : 'color:#742a2a;font-size:11px;font-weight:700;'">
+                            <t t-if="slotData.state === 'active'">🟢 ACTIVE</t>
+                            <t t-else="">🔴 BOOKED</t>
+                          </div>
+                          <t t-if="state.isStaff">
+                            <div style="font-size:10px;margin-top:3px;font-weight:600;" t-att-style="slotData.state === 'active' ? 'color:#276749;' : 'color:#742a2a;'"><t t-esc="slotData.member"/></div>
+                            <div style="font-size:10px;" t-att-style="slotData.state === 'active' ? 'color:#2f855a;' : 'color:#9b2c2c;'"><t t-esc="slotData.group_size"/> people</div>
+                          </t>
+                          <t t-else="">
+                            <div style="font-size:10px;color:#9b2c2c;margin-top:3px;">Not available</div>
+                          </t>
+                        </div>
+                      </t>
+
+                    </td>
+                  </t>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#4a5568;">
+            <div style="width:12px;height:12px;border-radius:50%;background:#38a169;"></div> Available
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#4a5568;">
+            <div style="width:12px;height:12px;border-radius:50%;background:#d69e2e;"></div> Pending approval
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#4a5568;">
+            <div style="width:12px;height:12px;border-radius:50%;background:#e53e3e;"></div> Booked
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#4a5568;">
+            <div style="width:12px;height:12px;border-radius:50%;background:#38a169;opacity:0.6;"></div> Active session
+          </div>
+          <div style="margin-left:auto;font-size:12px;color:#718096;">Min 3 people · Max 2 slots per day · Auto-cancel after 10 min</div>
+        </div>
+      </t>
+
       <!-- BOOKINGS TAB -->
       <t t-if="state.activeTab === 'bookings'">
-        <div class="lib-page-header"><h2>📅 Room Bookings</h2></div>
+        <div class="lib-page-header">
+          <h2>📅 Room Bookings</h2>
+          <button class="lib-btn lib-btn-primary" t-on-click="() => this.openList('library.room.booking')">+ New Booking</button>
+        </div>
         <div class="lib-filters">
           <button t-att-class="'lib-filter-btn' + (state.bookingFilter === 'all' ? ' active' : '')" t-on-click="() => this.setBookingFilter('all')">All</button>
           <button t-att-class="'lib-filter-btn' + (state.bookingFilter === 'pending' ? ' active' : '')" t-on-click="() => this.setBookingFilter('pending')">⏳ Pending</button>
