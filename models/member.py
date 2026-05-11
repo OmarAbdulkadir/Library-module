@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from odoo.exceptions import ValidationError
+from datetime import date
 
 class LibraryMember(models.Model):
     _name = 'library.member'
@@ -21,6 +21,8 @@ class LibraryMember(models.Model):
         ('active', 'Active'),
         ('suspended', 'Suspended'),
     ], string='Status', default='active', tracking=True)
+    reservation_ids = fields.One2many('library.reservation', 'member_id', string='Reservations')
+    has_overdue = fields.Boolean(string='Has Overdue Books', compute='_compute_has_overdue', store=True)
 
     @api.depends('borrow_ids', 'borrow_ids.state')
     def _compute_active_borrows(self):
@@ -37,8 +39,25 @@ class LibraryMember(models.Model):
         for member in self:
             member.streak = len(member.borrow_ids.filtered(lambda b: b.state == 'returned'))
 
+    @api.depends('borrow_ids', 'borrow_ids.is_overdue')
+    def _compute_has_overdue(self):
+        for member in self:
+            member.has_overdue = any(b.is_overdue for b in member.borrow_ids)
+
     def action_suspend(self):
         self.state = 'suspended'
 
     def action_activate(self):
         self.state = 'active'
+
+    def _cron_auto_suspend_overdue(self):
+        today = fields.Date.today()
+        members = self.search([('state', '=', 'active')])
+        for member in members:
+            overdue_borrows = member.borrow_ids.filtered(
+                lambda b: b.state == 'borrowed' and b.due_date and
+                (today - b.due_date).days > 7
+            )
+            if overdue_borrows:
+                member.state = 'suspended'
+                member.message_post(body='Auto suspended due to overdue books for more than 7 days.')

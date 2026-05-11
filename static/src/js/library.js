@@ -21,6 +21,7 @@ class LibraryDashboard extends Component {
             scheduleOffset: 0,
             loading: true,
             bookFilter: "all",
+            categoryFilter: "all",
             bookingFilter: "all",
             searchBook: "",
             announcement: "",
@@ -28,6 +29,19 @@ class LibraryDashboard extends Component {
             currentTime: "",
             libraryOpen: false,
             mostBorrowedBook: null,
+            userName: "",
+            topBooks: [],
+            topMembers: [],
+            myReservations: [],
+            myBookings: [],
+            notificationCount: 0,
+            showBookingModal: false,
+            modalRoomId: null,
+            modalSlot: null,
+            modalDate: "",
+            modalGroupSize: 3,
+            modalLanguage: "en",
+            modalNeedsComputer: false,
             ambientMood: "quiet",
             isAdmin: false,
             isStaff: false,
@@ -39,12 +53,20 @@ class LibraryDashboard extends Component {
         onWillStart(async () => {
             await this.detectUserRole();
             await this.loadAll();
+            try {
+                const resp = await fetch("/web/session/get_session_info", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", method: "call", params: {} }) });
+                const data = await resp.json();
+                this.state.userName = data.result.name || "";
+            } catch(e) {}
         });
 
         onMounted(() => {
             this._updateClock();
             this._clockInterval = setInterval(() => this._updateClock(), 1000);
             this._initScrollAnimations();
+            if (this.state.isPortal) {
+                document.body.classList.add('library_student_mode');
+            }
         });
 
         onWillUnmount(() => {
@@ -61,30 +83,16 @@ class LibraryDashboard extends Component {
             this.state.isPortal = false;
             return;
         } catch(e) {}
-
         try {
-            const result = await this.orm.searchRead("res.users",
-                [], ["groups_id"], { limit: 1 });
-            if (result.length) {
-                const groups = result[0].groups_id;
-                if (groups.includes(45)) {
-                    this.state.isAdmin = false;
-                    this.state.isStaff = false;
-                    this.state.isPortal = true;
-                    return;
-                }
-                if (groups.includes(46)) {
-                    this.state.isAdmin = false;
-                    this.state.isStaff = true;
-                    this.state.isPortal = false;
-                    return;
-                }
-            }
-        } catch(e) {}
-
-        this.state.isAdmin = false;
-        this.state.isStaff = true;
-        this.state.isPortal = false;
+            await this.orm.call("library.member", "check_access_rights", ["write"], { raise_exception: true });
+            this.state.isAdmin = false;
+            this.state.isStaff = true;
+            this.state.isPortal = false;
+        } catch(e) {
+            this.state.isAdmin = false;
+            this.state.isStaff = false;
+            this.state.isPortal = true;
+        }
     }
 
     _updateClock() {
@@ -140,6 +148,7 @@ class LibraryDashboard extends Component {
                 this.loadStats(),
                 this.loadBooks(),
                 this.loadMembers(),
+                this.loadMyProfile(),
                 this.loadBorrows(),
                 this.loadRooms(),
                 this.loadBookings(),
@@ -164,6 +173,13 @@ class LibraryDashboard extends Component {
                 this.orm.searchCount("library.borrow", [["is_overdue", "=", true]]),
             ]);
             this.state.stats = { books, members, borrows, rooms, pendingBookings: pending, overdueCount: overdue };
+            if (!this.state.isPortal) this.state.notificationCount = pending + overdue;
+            const topBooks = await this.orm.searchRead("library.book", [],
+                ["name", "borrow_count"], { order: "borrow_count desc", limit: 5 });
+            this.state.topBooks = topBooks;
+            const topMembers = await this.orm.searchRead("library.member", [],
+                ["name", "total_borrows"], { order: "total_borrows desc", limit: 5 });
+            this.state.topMembers = topMembers;
         } catch(e) {
             const [books, rooms, pending] = await Promise.all([
                 this.orm.searchCount("library.book", []),
@@ -173,17 +189,43 @@ class LibraryDashboard extends Component {
             this.state.stats = { books, members: 0, borrows: 0, rooms, pendingBookings: pending, overdueCount: 0 };
         }
     }
-
     async loadBooks() {
         this.state.books = await this.orm.searchRead("library.book", [],
             ["name", "author", "book_type", "state", "available_copies", "total_copies", "download_url", "category", "edition"]);
     }
-
     async loadMembers() {
         if (this.state.isPortal) return;
         try {
             this.state.members = await this.orm.searchRead("library.member", [],
-                ["name", "student_id", "email", "borrow_limit", "active_borrows", "streak", "state"]);
+                ["name", "student_id", "email", "borrow_limit", "active_borrows", "streak", "state", "has_overdue"]);
+        } catch(e) {}
+    }
+    async loadMyProfile() {
+        if (!this.state.isPortal) return;
+        try {
+            const resp = await fetch("/web/session/get_session_info", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jsonrpc: "2.0", method: "call", params: {} })
+            });
+            const data = await resp.json();
+            const uid = data.result.uid;
+            // Load my borrows
+            this.state.borrows = await this.orm.searchRead("library.borrow", [],
+                ["name", "book_id", "borrow_date", "due_date", "return_date", "state", "fine_amount", "is_overdue"],
+                { order: "id desc", limit: 50 });
+            // Load my reservations
+            this.state.myReservations = await this.orm.searchRead("library.reservation", [],
+                ["book_id", "reservation_date", "expiry_date", "state"],
+                { order: "id desc", limit: 20 });
+            // Load my bookings
+            this.state.myBookings = await this.orm.searchRead("library.room.booking", [],
+                ["room_id", "booking_date", "time_slot", "state"],
+                { order: "id desc", limit: 20 });
+            // Calculate notifications
+            const pendingBorrows = this.state.borrows.filter(b => b.state === "pending").length;
+            const notifiedReservations = this.state.myReservations.filter(r => r.state === "notified").length;
+            this.state.notificationCount = pendingBorrows + notifiedReservations;
         } catch(e) {}
     }
 
@@ -255,6 +297,9 @@ class LibraryDashboard extends Component {
 
     setTab(tab) {
         this.state.activeTab = tab;
+        if (tab === "profile" || tab === "borrows") {
+            this.state.notificationCount = 0;
+        }
         setTimeout(() => this._initScrollAnimations(), 100);
     }
 
@@ -270,11 +315,18 @@ class LibraryDashboard extends Component {
         if (this.state.bookFilter !== "all") {
             books = books.filter(b => b.book_type === this.state.bookFilter);
         }
+        if (this.state.categoryFilter !== "all") {
+            books = books.filter(b => b.category && b.category.toLowerCase() === this.state.categoryFilter.toLowerCase());
+        }
         if (this.state.searchBook) {
             const q = this.state.searchBook.toLowerCase();
             books = books.filter(b => b.name.toLowerCase().includes(q) || b.author.toLowerCase().includes(q));
         }
         return books;
+    }
+    get bookCategories() {
+        const cats = this.state.books.map(b => b.category).filter(c => c);
+        return ["all", ...new Set(cats)];
     }
 
     getRoomLight(room) {
@@ -349,6 +401,27 @@ class LibraryDashboard extends Component {
         this._computeMostBorrowedBook();
         this.notification.add("Book returned!", { type: "success" });
     }
+    async approveBorrow(id) {
+        try {
+            await this.orm.call("library.borrow", "action_approve", [[id]]);
+            await this.loadBorrows();
+            await this.loadStats();
+            await this.loadBooks();
+            this.notification.add("Borrow approved!", { type: "success" });
+        } catch(e) {
+            this.notification.add("Error: " + e.message, { type: "danger" });
+        }
+    }
+    async rejectBorrow(id) {
+        try {
+            await this.orm.call("library.borrow", "action_reject", [[id]]);
+            await this.loadBorrows();
+            await this.loadStats();
+            this.notification.add("Borrow rejected.", { type: "warning" });
+        } catch(e) {
+            this.notification.add("Error: " + e.message, { type: "danger" });
+        }
+    }
 
     async saveSetting(key, value) {
         await this.orm.call("ir.config_parameter", "set_param", [key, String(value)]);
@@ -362,25 +435,35 @@ class LibraryDashboard extends Component {
         await this.loadSchedule();
     }
 
-    getSlotStatus(roomId, slot) {
-        const key = roomId + "-" + slot;
-        const data = this.state.schedule[key];
-        if (!data) return null;
-        return data;
-    }
-
     bookSlot(roomId, slot) {
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            res_model: "library.room.booking",
-            views: [[false, "form"]],
-            target: "current",
-            context: {
-                default_room_id: roomId,
-                default_time_slot: slot,
-                default_booking_date: this.state.scheduleDate,
+        this.state.modalRoomId = roomId;
+        this.state.modalSlot = slot;
+        this.state.modalDate = this.state.scheduleDate;
+        this.state.modalGroupSize = 3;
+        this.state.showBookingModal = true;
+    }
+    async submitBooking() {
+        try {
+            const members = await this.orm.searchRead("library.member", [], ["id", "name"], { limit: 1 });
+            if (!members.length) {
+                this.notification.add("No member account found.", { type: "danger" });
+                return;
             }
-        });
+            await this.orm.create("library.room.booking", [{
+                room_id: this.state.modalRoomId,
+                time_slot: this.state.modalSlot,
+                booking_date: this.state.modalDate,
+                member_id: members[0].id,
+                group_size: this.state.modalGroupSize,
+                language: this.state.modalLanguage,
+                needs_computer: this.state.modalNeedsComputer,
+            }]);
+            this.state.showBookingModal = false;
+            this.notification.add("Room booked! Waiting for staff approval.", { type: "success" });
+            await this.loadSchedule();
+        } catch(e) {
+            this.notification.add("Error: " + e.message, { type: "danger" });
+        }
     }
 
     openRecord(model, id) {
@@ -401,7 +484,48 @@ class LibraryDashboard extends Component {
             target: "current",
         });
     }
+    async reserveBook(bookId, bookName) {
+        try {
+            const members = await this.orm.searchRead("library.member",
+                [], ["id", "name"], { limit: 10 });
+            if (!members.length) {
+                this.notification.add("No member account found. Please contact staff.", { type: "danger" });
+                return;
+            }
+            const member = members[0];
+            await this.orm.create("library.reservation", [{
+                book_id: bookId,
+                member_id: member.id,
+            }]);
+            this.notification.add("Reserved! You will be notified when the book is available.", { type: "success" });
+            await this.loadAll();
+        } catch(e) {
+            this.notification.add("Error: " + e.message, { type: "danger" });
+        }
+    }
+    async requestBorrow(bookId) {
+        try {
+            const members = await this.orm.searchRead("library.member",
+                [], ["id", "name"], { limit: 10 });
+            if (!members.length) {
+                this.notification.add("No member account found. Please contact staff.", { type: "danger" });
+                return;
+            }
+            const member = members[0];
+            const today = new Date().toISOString().split("T")[0];
+            await this.orm.create("library.borrow", [{
+                book_id: bookId,
+                member_id: member.id,
+                borrow_date: today,
+                due_date: today,
+                state: "pending",
+            }]);
+            this.notification.add("Borrow request sent! Staff will review it.", { type: "success" });
+            await this.loadAll();
+        } catch(e) {
+            this.notification.add("Error sending request: " + e.message, { type: "danger" });
+        }
+    }
 }
-
 LibraryDashboard.template = "library.Dashboard";
 registry.category("actions").add("library.dashboard", LibraryDashboard);

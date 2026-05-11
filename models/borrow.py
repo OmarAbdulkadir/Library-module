@@ -1,5 +1,6 @@
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
+from datetime import timedelta
 
 class LibraryBorrow(models.Model):
     _name = 'library.borrow'
@@ -10,16 +11,19 @@ class LibraryBorrow(models.Model):
     member_id = fields.Many2one('library.member', string='Member', required=True, tracking=True)
     book_id = fields.Many2one('library.book', string='Book', required=True, tracking=True)
     borrow_date = fields.Date(string='Borrow Date', default=fields.Date.today, required=True)
-    due_date = fields.Date(string='Due Date', required=True)
+    due_date = fields.Date(string='Due Date')
     return_date = fields.Date(string='Return Date')
     duration_days = fields.Integer(string='Duration (Days)', compute='_compute_duration')
     state = fields.Selection([
+        ('pending', 'Pending Approval'),
         ('borrowed', 'Borrowed'),
         ('returned', 'Returned'),
         ('overdue', 'Overdue'),
-    ], string='Status', default='borrowed', tracking=True)
+        ('rejected', 'Rejected'),
+    ], string='Status', default='pending', tracking=True)
     is_overdue = fields.Boolean(string='Is Overdue', compute='_compute_overdue', store=True)
     fine_amount = fields.Float(string='Fine Amount', compute='_compute_fine', store=True)
+    rejection_reason = fields.Text(string='Rejection Reason')
     notes = fields.Text(string='Notes')
 
     @api.depends('member_id', 'book_id', 'borrow_date')
@@ -63,34 +67,48 @@ class LibraryBorrow(models.Model):
             else:
                 rec.fine_amount = 0.0
 
-    @api.constrains('member_id', 'book_id')
-    def _check_borrow_limit(self):
+    def action_approve(self):
         for rec in self:
-            if rec.state == 'borrowed':
-                active = self.search_count([
-                    ('member_id', '=', rec.member_id.id),
-                    ('state', '=', 'borrowed'),
-                    ('id', '!=', rec.id)
-                ])
-                if active >= rec.member_id.borrow_limit:
-                    raise ValidationError(
-                        f"{rec.member_id.name} has reached their borrow limit of {rec.member_id.borrow_limit} books!"
-                    )
-                if rec.book_id.available_copies <= 0 and rec.book_id.book_type == 'physical':
-                    raise ValidationError(f"No copies of '{rec.book_id.name}' are available!")
+            # Check borrow limit
+            active = self.search_count([
+                ('member_id', '=', rec.member_id.id),
+                ('state', '=', 'borrowed'),
+                ('id', '!=', rec.id)
+            ])
+            if active >= rec.member_id.borrow_limit:
+                raise ValidationError(
+                    f"{rec.member_id.name} has reached their borrow limit of {rec.member_id.borrow_limit} books!"
+                )
+            # Check available copies
+            if rec.book_id.book_type == 'physical' and rec.book_id.available_copies <= 0:
+                raise ValidationError(f"No copies of '{rec.book_id.name}' are available!")
+            # Set due date to 14 days from today
+            rec.write({
+                'state': 'borrowed',
+                'borrow_date': fields.Date.today(),
+                'due_date': fields.Date.today() + timedelta(days=14),
+            })
+            rec.message_post(body=f"Borrow request approved. Due date: {rec.due_date}")
+
+    def action_reject(self):
+        for rec in self:
+            rec.write({'state': 'rejected'})
+            rec.message_post(body=f"Borrow request rejected.")
 
     def action_return(self):
-        self.write({
-            'state': 'returned',
-            'return_date': fields.Date.today(),
-            'is_overdue': False,
-            'fine_amount': 0.0,
-        })
+        for rec in self:
+            rec.write({
+                'state': 'returned',
+                'return_date': fields.Date.today(),
+                'is_overdue': False,
+                'fine_amount': 0.0,
+            })
+            self.env['library.reservation']._check_reservations_for_book(rec.book_id.id)
+
     def action_renew(self):
         for rec in self:
             if rec.state != 'borrowed':
                 raise ValidationError('Can only renew active borrows!')
-            from datetime import timedelta
             rec.due_date = rec.due_date + timedelta(days=7)
             rec.message_post(body=f"Borrow renewed. New due date: {rec.due_date}")
 

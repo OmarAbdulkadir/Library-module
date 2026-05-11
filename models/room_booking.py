@@ -173,7 +173,9 @@ class LibraryRoomBooking(models.Model):
         cutoff = fields.Datetime.now() - timedelta(hours=24)
         old_bookings = self.search([
             ('state', 'in', ['done', 'cancelled', 'rejected']),
+            '|',
             ('completed_at', '<=', cutoff),
+            ('write_date', '<=', cutoff),
         ])
         old_bookings.unlink()
 

@@ -7,7 +7,7 @@ access_library_member_staff,library.member.staff,model_library_member,library.gr
 access_library_member_portal,library.member.portal,model_library_member,library.group_library_portal,1,0,0,0
 access_library_borrow_admin,library.borrow.admin,model_library_borrow,library.group_library_admin,1,1,1,1
 access_library_borrow_staff,library.borrow.staff,model_library_borrow,library.group_library_staff,1,1,1,0
-access_library_borrow_portal,library.borrow.portal,model_library_borrow,library.group_library_portal,1,0,0,0
+access_library_borrow_portal,library.borrow.portal,model_library_borrow,library.group_library_portal,1,1,1,0
 access_library_room_admin,library.room.admin,model_library_room,library.group_library_admin,1,1,1,1
 access_library_room_staff,library.room.staff,model_library_room,library.group_library_staff,1,1,0,0
 access_library_room_portal,library.room.portal,model_library_room,library.group_library_portal,1,0,0,0
@@ -16,3 +16,6 @@ access_library_room_booking_staff,library.room.booking.staff,model_library_room_
 access_library_room_booking_portal,library.room.booking.portal,model_library_room_booking,library.group_library_portal,1,1,1,0
 access_library_user_wizard_admin,library.user.wizard.admin,model_library_user_wizard,library.group_library_admin,1,1,1,1
 access_library_user_wizard_staff,library.user.wizard.staff,model_library_user_wizard,library.group_library_staff,1,1,1,1
+access_library_reservation_admin,library.reservation.admin,model_library_reservation,library.group_library_admin,1,1,1,1
+access_library_reservation_staff,library.reservation.staff,model_library_reservation,library.group_library_staff,1,1,1,0
+access_library_reservation_portal,library.reservation.portal,model_library_reservation,library.group_library_portal,1,1,1,0

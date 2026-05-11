@@ -16,6 +16,8 @@
         'views/library_user_views.xml',
         'views/menu_views.xml',
         'views/dashboard_action.xml',
+        'data/cron.xml',
+        'data/mail_template.xml',
     ],
     'assets': {
         'web.assets_backend': [

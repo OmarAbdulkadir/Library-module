@@ -32,6 +32,7 @@ class LibraryBook(models.Model):
     publish_year = fields.Integer(string='Publish Year')
     active = fields.Boolean(string='Active', default=True)
     cover_image = fields.Binary(string='Cover Image', attachment=True)
+    reservation_ids = fields.One2many('library.reservation', 'book_id', string='Reservations')
     cover_image_filename = fields.Char(string='Cover Filename')
 
     @api.depends('borrow_ids', 'borrow_ids.state', 'total_copies')

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="email_template_book_available" model="mail.template">
+            <field name="name">Library: Book Now Available</field>
+            <field name="model_id" ref="model_library_reservation"/>
+            <field name="subject">Good news! "{{ object.book_id.name }}" is now available</field>
+            <field name="email_to">{{ object.member_id.email }}</field>
+            <field name="body_html"><![CDATA[
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #1E3A5F, #2D6A9F); padding: 30px; border-radius: 12px; text-align: center;">
+        <h1 style="color: white; margin: 0;">OSTIM University Library</h1>
+        <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0;">Book Availability Notification</p>
+    </div>
+    <div style="padding: 30px; background: #f5f7fa; border-radius: 0 0 12px 12px;">
+        <h2 style="color: #1E3A5F;">Great news, {{ object.member_id.name }}! 🎉</h2>
+        <p style="color: #4a5568; font-size: 16px;">The book you reserved is now available:</p>
+        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #2D6A9F; margin: 20px 0;">
+            <h3 style="color: #1E3A5F; margin: 0;">{{ object.book_id.name }}</h3>
+            <p style="color: #718096; margin: 4px 0 0;">by {{ object.book_id.author }}</p>
+        </div>
+        <p style="color: #e53e3e; font-weight: bold;">⚠ Please borrow it within 7 days or your reservation will expire.</p>
+        <p style="color: #718096;">Visit the library or log in to the portal to borrow the book.</p>
+    </div>
+</div>
+            ]]></field>
+        </record>
+    </data>
+</odoo>

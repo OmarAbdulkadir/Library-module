@@ -22,6 +22,8 @@
           📅 Bookings
           <span t-if="state.isStaff and state.stats.pendingBookings &gt; 0" class="tab-badge"><t t-esc="state.stats.pendingBookings"/></span>
         </button>
+        <button t-if="state.isStaff" class="lib-nav-tab" t-att-class="state.activeTab === 'stats' ? 'active' : ''" t-on-click="() => this.setTab('stats')">📊 Statistics</button>
+        <button t-if="state.isPortal" class="lib-nav-tab" t-att-class="state.activeTab === 'profile' ? 'active' : ''" t-on-click="() => this.setTab('profile')">👤 My Profile</button>
         <button t-if="state.isAdmin" class="lib-nav-tab" t-att-class="state.activeTab === 'settings' ? 'active' : ''" t-on-click="() => this.setTab('settings')">⚙ Settings</button>
       </div>
       <div class="lib-navbar-right">
@@ -34,6 +36,11 @@
         <span t-if="state.isAdmin" style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:12px;font-size:12px;color:white;">👑 Admin</span>
         <span t-elif="state.isStaff" style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:12px;font-size:12px;color:white;">👔 Staff</span>
         <span t-else="" style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:12px;font-size:12px;color:white;">🎓 Student</span>
+        <div style="position:relative;cursor:pointer;" t-on-click="() => this.setTab(state.isPortal ? 'profile' : 'borrows')">
+          <span style="font-size:20px;">🔔</span>
+          <span t-if="state.notificationCount > 0" style="position:absolute;top:-6px;right:-6px;background:#e53e3e;color:white;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;"><t t-esc="state.notificationCount"/></span>
+        </div>
+        <a href="/web/session/logout?redirect=/odoo/action-198" style="background:rgba(255,255,255,0.15);padding:4px 12px;border-radius:12px;font-size:12px;color:white;text-decoration:none;margin-left:6px;">🚪 Logout</a>
       </div>
     </div>
 
@@ -55,54 +62,56 @@
 
       <!-- DASHBOARD TAB -->
       <t t-if="state.activeTab === 'dashboard'">
-        <div t-att-class="'lib-mood-banner lib-animate lib-mood-banner-' + state.ambientMood">
-          <span class="lib-mood-icon">
+        <div t-att-class="'lib-mood-banner lib-animate lib-mood-banner-' + state.ambientMood" style="position:relative;overflow:hidden;">
+          <span class="lib-mood-icon" style="font-size:52px;">
             <t t-if="state.ambientMood === 'quiet'">🌙</t>
             <t t-elif="state.ambientMood === 'moderate'">📖</t>
             <t t-elif="state.ambientMood === 'busy'">⚡</t>
             <t t-else="">🔥</t>
           </span>
-          <div>
-            <div class="lib-mood-title">
-              <t t-if="state.ambientMood === 'quiet'">Library is Quiet</t>
-              <t t-elif="state.ambientMood === 'moderate'">Library is Active</t>
-              <t t-elif="state.ambientMood === 'busy'">Library is Busy</t>
-              <t t-else="">Library is at Capacity</t>
+          <div style="flex:1;">
+            <div style="font-size:22px;font-weight:800;color:#1E3A5F;">
+              Good <t t-if="state.libraryOpen">Day</t><t t-else="">Evening</t>
+              <t t-if="state.userName">, <t t-esc="state.userName"/></t> 👋
             </div>
-            <div class="lib-mood-sub">
-              <t t-if="state.ambientMood === 'quiet'">Great time to find a quiet spot 😌</t>
-              <t t-elif="state.ambientMood === 'moderate'">Rooms are filling up — book early 📅</t>
-              <t t-elif="state.ambientMood === 'busy'">Very busy today — limited space ⚠</t>
+            <div style="font-size:14px;color:#4a5568;margin-top:4px;">
+              <t t-if="state.ambientMood === 'quiet'">Library is quiet — great time to study 😌</t>
+              <t t-elif="state.ambientMood === 'moderate'">Library is active — rooms filling up 📅</t>
+              <t t-elif="state.ambientMood === 'busy'">Library is busy — limited space ⚠</t>
               <t t-else="">All rooms near capacity 🚫</t>
             </div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button t-if="state.isStaff" class="lib-btn lib-btn-primary" t-on-click="() => this.setTab('borrows')" style="font-size:12px;padding:8px 14px;">View Borrowings</button>
+            <button class="lib-btn" t-on-click="() => this.setTab('schedule')" style="font-size:12px;padding:8px 14px;background:white;color:#1E3A5F;border:2px solid #1E3A5F;">Book a Room</button>
           </div>
         </div>
 
         <div class="lib-stats-grid">
-          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('books')">
-            <div class="lib-stat-icon">📚</div>
-            <div class="lib-stat-number"><t t-esc="state.stats.books"/></div>
-            <div class="lib-stat-label">Total Books</div>
+          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('books')" style="border-top:4px solid #4299E1;">
+            <div style="font-size:36px;margin-bottom:8px;">📚</div>
+            <div style="font-size:40px;font-weight:800;color:#2B6CB0;line-height:1;"><t t-esc="state.stats.books"/></div>
+            <div style="font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Total Books</div>
           </div>
-          <div t-if="state.isStaff" class="lib-stat-card lib-animate" t-on-click="() => this.setTab('members')">
-            <div class="lib-stat-icon">👥</div>
-            <div class="lib-stat-number"><t t-esc="state.stats.members"/></div>
-            <div class="lib-stat-label">Members</div>
+          <div t-if="state.isStaff" class="lib-stat-card lib-animate" t-on-click="() => this.setTab('members')" style="border-top:4px solid #38B2AC;">
+            <div style="font-size:36px;margin-bottom:8px;">👥</div>
+            <div style="font-size:40px;font-weight:800;color:#2C7A7B;line-height:1;"><t t-esc="state.stats.members"/></div>
+            <div style="font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Members</div>
           </div>
-          <div t-if="state.isStaff" class="lib-stat-card lib-animate" t-on-click="() => this.setTab('borrows')">
-            <div class="lib-stat-icon">📋</div>
-            <div class="lib-stat-number"><t t-esc="state.stats.borrows"/></div>
-            <div class="lib-stat-label">Active Borrows</div>
+          <div t-if="state.isStaff" class="lib-stat-card lib-animate" t-on-click="() => this.setTab('borrows')" style="border-top:4px solid #ED8936;">
+            <div style="font-size:36px;margin-bottom:8px;">📋</div>
+            <div style="font-size:40px;font-weight:800;color:#C05621;line-height:1;"><t t-esc="state.stats.borrows"/></div>
+            <div style="font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Active Borrows</div>
           </div>
-          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('rooms')">
-            <div class="lib-stat-icon">🚪</div>
-            <div class="lib-stat-number"><t t-esc="state.stats.rooms"/></div>
-            <div class="lib-stat-label">Study Rooms</div>
+          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('rooms')" style="border-top:4px solid #805AD5;">
+            <div style="font-size:36px;margin-bottom:8px;">🚪</div>
+            <div style="font-size:40px;font-weight:800;color:#553C9A;line-height:1;"><t t-esc="state.stats.rooms"/></div>
+            <div style="font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Study Rooms</div>
           </div>
-          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('bookings')">
-            <div class="lib-stat-icon">⏳</div>
-            <div class="lib-stat-number"><t t-esc="state.stats.pendingBookings"/></div>
-            <div class="lib-stat-label">Pending Bookings</div>
+          <div class="lib-stat-card lib-animate" t-on-click="() => this.setTab('bookings')" style="border-top:4px solid #E53E3E;">
+            <div style="font-size:36px;margin-bottom:8px;">⏳</div>
+            <div style="font-size:40px;font-weight:800;color:#C53030;line-height:1;"><t t-esc="state.stats.pendingBookings"/></div>
+            <div style="font-size:11px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Pending Bookings</div>
           </div>
         </div>
 
@@ -116,15 +125,24 @@
         </div>
 
         <div class="lib-room-quick lib-animate">
-          <div class="lib-room-quick-title">🚦 Room Status — <span style="font-size:12px;font-weight:400;opacity:0.7;">Click to view schedule</span></div>
-          <div class="lib-room-quick-grid">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="font-size:15px;font-weight:700;color:#2d3748;">🚦 Room Status</div>
+            <button class="lib-btn" t-on-click="() => this.setTab('schedule')" style="font-size:12px;padding:6px 12px;background:#EBF8FF;color:#2B6CB0;border:none;border-radius:8px;cursor:pointer;font-weight:600;">View Schedule →</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
             <t t-foreach="state.rooms" t-as="room" t-key="room.id">
-              <div class="lib-room-quick-item" t-on-click="() => this.setTab('schedule')">
-                <div t-att-class="'lib-traffic-light lib-light-' + this.getRoomLight(room)">
-                  <div class="lib-light-dot"/>
+              <div t-on-click="() => this.setTab('schedule')" style="background:#f7fafc;border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;border:2px solid transparent;" 
+                t-att-style="'background:' + (this.getRoomLight(room) === 'green' ? '#F0FFF4' : this.getRoomLight(room) === 'yellow' ? '#FFFFF0' : '#FFF5F5') + ';border-radius:12px;padding:16px;cursor:pointer;border:2px solid ' + (this.getRoomLight(room) === 'green' ? '#68D391' : this.getRoomLight(room) === 'yellow' ? '#F6E05E' : '#FC8181') + ';'">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div t-att-style="'width:12px;height:12px;border-radius:50%;background:' + (this.getRoomLight(room) === 'green' ? '#48BB78' : this.getRoomLight(room) === 'yellow' ? '#ECC94B' : '#E53E3E') + ';box-shadow:0 0 6px ' + (this.getRoomLight(room) === 'green' ? '#48BB78' : this.getRoomLight(room) === 'yellow' ? '#ECC94B' : '#E53E3E')"/>
+                  <span t-att-style="'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:' + (this.getRoomLight(room) === 'green' ? '#276749' : this.getRoomLight(room) === 'yellow' ? '#975A16' : '#9B2C2C')">
+                    <t t-if="this.getRoomLight(room) === 'green'">Available</t>
+                    <t t-elif="this.getRoomLight(room) === 'yellow'">Busy</t>
+                    <t t-else="">Full</t>
+                  </span>
                 </div>
-                <div class="lib-room-quick-name"><t t-esc="room.name"/></div>
-                <div class="lib-room-quick-occ"><t t-esc="room.current_occupancy"/>/<t t-esc="room.capacity"/></div>
+                <div style="font-size:13px;font-weight:700;color:#2d3748;"><t t-esc="room.name"/></div>
+                <div style="font-size:11px;color:#718096;margin-top:4px;"><t t-esc="room.current_occupancy"/>/<t t-esc="room.capacity"/> people</div>
               </div>
             </t>
           </div>
@@ -230,21 +248,58 @@
           <button t-att-class="'lib-filter-btn' + (state.bookFilter === 'physical' ? ' active' : '')" t-on-click="() => this.setBookFilter('physical')">📚 Physical</button>
           <button t-att-class="'lib-filter-btn' + (state.bookFilter === 'ebook' ? ' active' : '')" t-on-click="() => this.setBookFilter('ebook')">💻 E-Books</button>
         </div>
+        <div class="lib-filters" style="margin-top:6px;">
+          <t t-foreach="bookCategories" t-as="cat" t-key="cat">
+            <button t-att-class="'lib-filter-btn' + (state.categoryFilter === cat ? ' active' : '')"
+              t-on-click="() => { this.state.categoryFilter = cat; }">
+              <t t-if="cat === 'all'">All Categories</t>
+              <t t-else=""><t t-esc="cat"/></t>
+            </button>
+          </t>
+        </div>
         <input class="lib-search" type="text" placeholder="Search books by title or author..." t-model="state.searchBook"/>
         <div class="lib-books-grid">
           <t t-foreach="filteredBooks" t-as="book" t-key="book.id">
             <div class="lib-book-card" t-on-click="() => this.openRecord('library.book', book.id)">
+              <div t-att-style="'height:120px;border-radius:10px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:48px;background:' + (book.book_type === 'ebook' ? 'linear-gradient(135deg,#E6FFFA,#B2F5EA)' : 'linear-gradient(135deg,#EBF8FF,#BEE3F8)')">
+                <t t-if="book.book_type === 'ebook'">💻</t>
+                <t t-else="">📚</t>
+              </div>
               <span t-att-class="'lib-type-badge ' + book.book_type">
-                <t t-if="book.book_type === 'ebook'">💻 E-Book</t>
-                <t t-else="">📚 Physical</t>
+                <t t-if="book.book_type === 'ebook'">E-Book</t>
+                <t t-else="">Physical</t>
               </span>
-              <div class="lib-book-title"><t t-esc="book.name"/></div>
-              <div class="lib-book-author">by <t t-esc="book.author"/></div>
+              <div class="lib-book-title" style="margin-top:10px;font-size:15px;font-weight:700;"><t t-esc="book.name"/></div>
+              <div class="lib-book-author" style="font-size:12px;color:#718096;margin-top:4px;">by <t t-esc="book.author"/></div>
               <div class="lib-book-footer">
                 <span t-att-class="'lib-status ' + book.state"><t t-esc="book.state"/></span>
                 <span t-if="book.book_type === 'physical'" style="font-size:12px;color:#718096;">
                   <t t-esc="book.available_copies"/>/<t t-esc="book.total_copies"/> copies
                 </span>
+                <span t-if="book.book_type === 'ebook'" style="font-size:12px;color:#38B2AC;font-weight:600;">
+                  Unlimited Access
+                </span>
+              </div>
+              <div t-if="state.isPortal" style="margin-top:8px;">
+                <t t-if="book.book_type === 'ebook'">
+                  <a t-att-href="book.download_url or '#'" target="_blank"
+                    class="lib-btn lib-btn-primary" style="width:100%;font-size:12px;padding:6px;text-decoration:none;display:block;text-align:center;"
+                    t-on-click.stop="() => {}">
+                    💾 Download E-Book
+                  </a>
+                </t>
+                <t t-else="">
+                  <button t-if="book.available_copies > 0"
+                    class="lib-btn lib-btn-primary" style="width:100%;font-size:12px;padding:6px;"
+                    t-on-click="(ev) => { ev.stopPropagation(); this.requestBorrow(book.id); }">
+                    📩 Request to Borrow
+                  </button>
+                  <button t-else=""
+                    class="lib-btn" style="width:100%;font-size:12px;padding:6px;background:#D69E2E;color:white;border:none;cursor:pointer;border-radius:10px;"
+                    t-on-click="(ev) => { ev.stopPropagation(); this.reserveBook(book.id, book.name); }">
+                    🔔 Reserve When Available
+                  </button>
+                </t>
               </div>
             </div>
           </t>
@@ -266,6 +321,9 @@
               <div class="lib-member-stats">
                 <span class="lib-member-stat">📚 <t t-esc="member.active_borrows"/>/<t t-esc="member.borrow_limit"/> books</span>
                 <span class="lib-member-stat">🔥 <t t-esc="member.streak"/> streak</span>
+              </div>
+              <div style="margin-top:8px;background:#EDF2F7;border-radius:4px;height:4px;overflow:hidden;">
+                <div t-att-style="'height:100%;border-radius:4px;background:' + (member.active_borrows >= member.borrow_limit ? '#E53E3E' : member.active_borrows > 0 ? '#ED8936' : '#48BB78') + ';width:' + (member.borrow_limit > 0 ? Math.round(member.active_borrows / member.borrow_limit * 100) : 0) + '%'"/>
               </div>
             </div>
             <span t-att-class="'lib-status ' + member.state"><t t-esc="member.state"/></span>
@@ -305,6 +363,8 @@
                     <td><span t-att-class="'lib-status ' + borrow.state"><t t-esc="borrow.state"/></span></td>
                     <td>
                       <button t-if="borrow.state === 'borrowed'" class="lib-btn lib-btn-return" t-on-click.stop="() => this.returnBook(borrow.id)">Return</button>
+                      <button t-if="borrow.state === 'pending'" class="lib-btn lib-btn-approve" style="margin-right:4px;" t-on-click.stop="() => this.approveBorrow(borrow.id)">✓ Approve</button>
+                      <button t-if="borrow.state === 'pending'" class="lib-btn lib-btn-reject" t-on-click.stop="() => this.rejectBorrow(borrow.id)">✗ Reject</button>
                     </td>
                   </tr>
                 </t>
@@ -511,6 +571,123 @@
       </t>
 
       <!-- SETTINGS TAB -->
+      <t t-if="state.activeTab === 'stats' and state.isStaff">
+        <div class="lib-page-header"><h2>📊 Library Statistics</h2></div>
+        <div class="lib-stats-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+          <div class="lib-stat-card" style="text-align:center;">
+            <div style="font-size:36px;font-weight:700;color:#2b6cb0;"><t t-esc="state.stats.books"/></div>
+            <div style="color:#718096;">Total Books</div>
+          </div>
+          <div class="lib-stat-card" style="text-align:center;">
+            <div style="font-size:36px;font-weight:700;color:#276749;"><t t-esc="state.stats.members"/></div>
+            <div style="color:#718096;">Total Members</div>
+          </div>
+          <div class="lib-stat-card" style="text-align:center;">
+            <div style="font-size:36px;font-weight:700;color:#c05621;"><t t-esc="state.stats.borrows"/></div>
+            <div style="color:#718096;">Active Borrows</div>
+          </div>
+          <div class="lib-stat-card" style="text-align:center;">
+            <div style="font-size:36px;font-weight:700;color:#e53e3e;"><t t-esc="state.stats.overdueCount"/></div>
+            <div style="color:#718096;">Overdue Books</div>
+          </div>
+          <div class="lib-stat-card" style="text-align:center;">
+            <div style="font-size:36px;font-weight:700;color:#553c9a;"><t t-esc="state.stats.rooms"/></div>
+            <div style="color:#718096;">Study Rooms</div>
+          </div>
+          <div class="lib-stat-card" style="text-align:center;">
+            <div style="font-size:36px;font-weight:700;color:#b7791f;"><t t-esc="state.stats.pendingBookings"/></div>
+            <div style="color:#718096;">Pending Bookings</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="lib-stat-card">
+            <h3 style="margin-bottom:12px;">🏆 Most Borrowed Books</h3>
+            <t t-foreach="state.topBooks" t-as="book" t-key="book.id">
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                <span><t t-esc="book.name"/></span>
+                <span style="font-weight:700;color:#2b6cb0;"><t t-esc="book.borrow_count"/>x</span>
+              </div>
+            </t>
+          </div>
+          <div class="lib-stat-card">
+            <h3 style="margin-bottom:12px;">👥 Top Borrowers</h3>
+            <t t-foreach="state.topMembers" t-as="member" t-key="member.id">
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                <span><t t-esc="member.name"/></span>
+                <span style="font-weight:700;color:#276749;"><t t-esc="member.total_borrows"/> books</span>
+              </div>
+            </t>
+          </div>
+        </div>
+      </t>
+      <!-- PROFILE TAB -->
+      <t t-if="state.activeTab === 'profile' and state.isPortal">
+        <div class="lib-page-header">
+          <h2>👤 My Profile</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div style="background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <h3 style="font-size:16px;font-weight:700;color:#2d3748;margin-bottom:16px;">📚 My Active Borrows</h3>
+            <t t-foreach="state.borrows.filter(b => b.state === 'borrowed' or b.state === 'pending')" t-as="borrow" t-key="borrow.id">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f4f8;">
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:#1a202c;"><t t-esc="borrow.book_id[1]"/></div>
+                  <div style="font-size:12px;color:#718096;">Due: <t t-esc="borrow.due_date"/></div>
+                </div>
+                <span t-att-class="'lib-status ' + borrow.state"><t t-esc="borrow.state"/></span>
+              </div>
+            </t>
+            <div t-if="state.borrows.filter(b => b.state === 'borrowed' or b.state === 'pending').length === 0" style="text-align:center;padding:24px;color:#a0aec0;">
+              No active borrows
+            </div>
+          </div>
+          <div style="background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <h3 style="font-size:16px;font-weight:700;color:#2d3748;margin-bottom:16px;">🔔 My Reservations</h3>
+            <t t-foreach="state.myReservations" t-as="res" t-key="res.id">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f4f8;">
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:#1a202c;"><t t-esc="res.book_id[1]"/></div>
+                  <div style="font-size:12px;color:#718096;">Reserved: <t t-esc="res.reservation_date"/></div>
+                </div>
+                <span t-att-class="'lib-status ' + res.state"><t t-esc="res.state"/></span>
+              </div>
+            </t>
+            <div t-if="state.myReservations.length === 0" style="text-align:center;padding:24px;color:#a0aec0;">
+              No reservations
+            </div>
+          </div>
+          <div style="background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <h3 style="font-size:16px;font-weight:700;color:#2d3748;margin-bottom:16px;">📅 My Room Bookings</h3>
+            <t t-foreach="state.myBookings" t-as="booking" t-key="booking.id">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f4f8;">
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:#1a202c;"><t t-esc="booking.room_id[1]"/></div>
+                  <div style="font-size:12px;color:#718096;"><t t-esc="booking.booking_date"/> <t t-if="booking.time_slot">— <t t-esc="booking.time_slot"/></t></div>
+                </div>
+                <span t-att-class="'lib-status ' + booking.state"><t t-esc="booking.state"/></span>
+              </div>
+            </t>
+            <div t-if="state.myBookings.length === 0" style="text-align:center;padding:24px;color:#a0aec0;">
+              No room bookings
+            </div>
+          </div>
+          <div style="background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <h3 style="font-size:16px;font-weight:700;color:#2d3748;margin-bottom:16px;">📖 Borrow History</h3>
+            <t t-foreach="state.borrows.filter(b => b.state === 'returned')" t-as="borrow" t-key="borrow.id">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f4f8;">
+                <div>
+                  <div style="font-size:14px;font-weight:600;color:#1a202c;"><t t-esc="borrow.book_id[1]"/></div>
+                  <div style="font-size:12px;color:#718096;">Returned: <t t-esc="borrow.return_date"/></div>
+                </div>
+                <span class="lib-status returned">Returned</span>
+              </div>
+            </t>
+            <div t-if="state.borrows.filter(b => b.state === 'returned').length === 0" style="text-align:center;padding:24px;color:#a0aec0;">
+              No history yet
+            </div>
+          </div>
+        </div>
+      </t>
       <t t-if="state.activeTab === 'settings' and state.isAdmin">
         <div class="lib-page-header"><h2>⚙ Library Settings</h2></div>
         <div class="lib-settings-card lib-animate">
@@ -536,6 +713,54 @@
         </div>
       </t>
 
+    <!-- BOOKING MODAL -->
+    <div t-if="state.showBookingModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;">
+      <div style="background:white;border-radius:20px;padding:32px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+          <h2 style="font-size:20px;font-weight:800;color:#1E3A5F;">📅 Book a Room</h2>
+          <button t-on-click="() => { this.state.showBookingModal = false; }" style="background:none;border:none;font-size:20px;cursor:pointer;color:#718096;">✕</button>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:6px;">Date</label>
+          <div style="padding:10px 14px;background:#f7fafc;border-radius:10px;font-size:14px;color:#2d3748;font-weight:600;"><t t-esc="state.modalDate"/></div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:6px;">Time Slot</label>
+          <div style="padding:10px 14px;background:#f7fafc;border-radius:10px;font-size:14px;color:#2d3748;font-weight:600;"><t t-esc="state.modalSlot"/> - <t t-esc="state.modalSlot"/></div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:6px;">Group Size (min 3)</label>
+          <input type="number" min="3" max="30"
+            t-att-value="state.modalGroupSize"
+            t-on-change="(e) => { this.state.modalGroupSize = parseInt(e.target.value); }"
+            style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;"/>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:6px;">Language</label>
+          <select t-on-change="(e) => { this.state.modalLanguage = e.target.value; }"
+            style="width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;">
+            <option value="en">English</option>
+            <option value="tr">Türkçe</option>
+          </select>
+        </div>
+        <div style="margin-bottom:24px;display:flex;align-items:center;gap:10px;">
+          <input type="checkbox" id="needsComputer"
+            t-on-change="(e) => { this.state.modalNeedsComputer = e.target.checked; }"
+            style="width:18px;height:18px;cursor:pointer;"/>
+          <label for="needsComputer" style="font-size:14px;font-weight:600;color:#4a5568;cursor:pointer;">Needs Computer</label>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button t-on-click="() => { this.state.showBookingModal = false; }"
+            style="flex:1;padding:12px;border:2px solid #e2e8f0;background:white;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;color:#4a5568;">
+            Cancel
+          </button>
+          <button t-on-click="() => this.submitBooking()"
+            style="flex:1;padding:12px;background:linear-gradient(135deg,#1E3A5F,#2D6A9F);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">
+            Confirm Booking
+          </button>
+        </div>
+      </div>
+    </div>
     </div>
   </div>
 </t>

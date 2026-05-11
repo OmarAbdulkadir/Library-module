@@ -6,15 +6,23 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <button name="action_approve" string="Approve" type="object"
+                            class="btn-success" invisible="state != 'pending'"
+                            groups="library.group_library_staff,library.group_library_admin"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            class="btn-danger" invisible="state != 'pending'"
+                            groups="library.group_library_staff,library.group_library_admin"/>
                     <button name="action_return" string="Return Book" type="object"
                             class="btn-primary" invisible="state != 'borrowed'"
                             groups="library.group_library_staff,library.group_library_admin"/>
                     <button name="action_renew" string="Renew 7 Days" type="object"
-                            class="btn-secondary" invisible="state != 'borrowed'"/>
+                            class="btn-secondary" invisible="state != 'borrowed'"
+                            groups="library.group_library_staff,library.group_library_admin"/>
                     <button name="action_pay_fine" string="Pay Fine" type="object"
-                            class="btn-warning" invisible="fine_amount == 0"/>
+                            class="btn-warning" invisible="fine_amount == 0"
+                            groups="library.group_library_staff,library.group_library_admin"/>
                     <field name="state" widget="statusbar"
-                           statusbar_visible="borrowed,returned,overdue"/>
+                           statusbar_visible="pending,borrowed,returned"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -33,6 +41,8 @@
                             <field name="state"/>
                             <field name="is_overdue"/>
                             <field name="fine_amount"/>
+                            <field name="rejection_reason"
+                                   invisible="state != 'rejected'"/>
                             <field name="notes"/>
                         </group>
                     </group>
@@ -40,6 +50,7 @@
             </form>
         </field>
     </record>
+
     <record id="view_library_borrow_list" model="ir.ui.view">
         <field name="name">library.borrow.list</field>
         <field name="model">library.borrow</field>
@@ -53,12 +64,15 @@
                 <field name="return_date"/>
                 <field name="fine_amount"/>
                 <field name="state"
+                       decoration-warning="state == 'pending'"
                        decoration-success="state == 'returned'"
                        decoration-danger="state == 'overdue'"
-                       decoration-info="state == 'borrowed'"/>
+                       decoration-info="state == 'borrowed'"
+                       decoration-muted="state == 'rejected'"/>
             </list>
         </field>
     </record>
+
     <record id="action_library_borrow" model="ir.actions.act_window">
         <field name="name">Borrowings</field>
         <field name="res_model">library.borrow</field>
